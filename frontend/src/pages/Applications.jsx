@@ -1,225 +1,282 @@
-import axios from "axios";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, FileText, UploadCloud, CheckCircle, BrainCircuit } from "lucide-react";
 import moment from "moment";
 import React, { useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 import { assets } from "../assets/assets";
 import Footer from "../components/Footer";
-import Loader from "../components/Loader";
 import Navbar from "../components/Navbar";
 import { AppContext } from "../context/AppContext";
+import api from "../utils/api";
 
 const Applications = () => {
   const {
     userApplication,
     applicationsLoading,
-    backendUrl,
-    userToken,
-    userData,
-    fetchUserData,
     fetchUserApplication,
   } = useContext(AppContext);
 
+  const [resumeProfile, setResumeProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  
   const [isEdit, setIsEdit] = useState(false);
   const [resumeFile, setResumeFile] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
 
-  const handleResumeSave = async () => {
-    if (!resumeFile) {
-      toast.error("Please select a resume file");
-      return;
-    }
-
-    setLoading(true);
+  const fetchResumeProfile = async () => {
     try {
-      const formData = new FormData();
-      formData.append("file", resumeFile);
-
-      const { data } = await axios.post(
-        `${backendUrl}/student/analyze_resume/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${userToken}`,
-          },
-        }
-      );
-
-      if (data.resume_summary) {
-        toast.success("Resume uploaded and analyzed successfully!");
-        setIsEdit(false);
-        fetchUserData();
-      } else {
-        toast.error("Resume upload failed");
-      }
+      setProfileLoading(true);
+      const { data } = await api.get(`/ai/resume`);
+      setResumeProfile(data);
     } catch (error) {
-      console.error("Resume upload error:", error);
-      toast.error(error?.response?.data?.detail || "Resume upload failed");
+      if (error?.response?.status !== 404) {
+        toast.error("Failed to load resume profile");
+      }
+      setResumeProfile(null);
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUserApplication();
+    fetchResumeProfile();
   }, []);
+
+  const handleResumeSave = async () => {
+    if (!resumeFile) {
+      toast.error("Please select a resume file (PDF)");
+      return;
+    }
+
+    setUploadLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", resumeFile);
+
+      const { data } = await api.post(`/ai/resume/upload`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      if (data.id) {
+        toast.success("Resume uploaded & analyzed successfully!");
+        setResumeProfile(data);
+        setIsEdit(false);
+        setResumeFile(null);
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || "Resume upload failed");
+    } finally {
+      setUploadLoading(false);
+    }
+  };
 
   return (
     <>
       <Navbar />
-      <section>
-        {/* Resume Section */}
-        <div className="mb-10">
-          <h1 className="text-lg font-medium mb-3">Your Resume</h1>
-          {isEdit ? (
-            <div className="flex items-center flex-wrap gap-3">
-              <label className="flex items-center gap-1 cursor-pointer">
-                <input
-                  type="file"
-                  hidden
-                  accept="application/pdf"
-                  onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
-                />
-                <span className="bg-blue-100 text-blue-500 rounded px-3 py-1.5 text-sm hover:bg-blue-200 transition-colors">
-                  {resumeFile ? resumeFile.name : "Select resume"}
-                </span>
-                <img
-                  className="w-8"
-                  src={assets.profile_upload_icon}
-                  alt="Upload icon"
-                />
-              </label>
+      <div className="bg-gray-50/50 min-h-screen pt-8 pb-20">
+        <section className="container mx-auto px-4 md:px-8 max-w-6xl">
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Left Column: Resume Profile */}
+            <div className="lg:col-span-1 space-y-6">
+              
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex flex-col mb-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <BrainCircuit className="h-5 w-5 text-indigo-600" />
+                    <h2 className="text-xl font-bold text-gray-900">AI Profile</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Your parsed resume data</p>
+                </div>
 
-              <div className="flex gap-2">
-                <button
-                  disabled={!resumeFile || loading}
-                  onClick={handleResumeSave}
-                  className={`flex items-center gap-2 rounded px-3 py-1.5 text-sm transition-colors border border-gray-200  ${
-                    !resumeFile || loading
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-blue-100 text-blue-500 hover:bg-blue-200 cursor-pointer"
-                  }`}
-                >
-                  {loading ? (
-                    <>
-                      <LoaderCircle className="animate-spin w-4 h-4" />
-                      Uploading...
-                    </>
-                  ) : (
-                    "Save"
-                  )}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              {userData?.resume ? (
-                <a
-                  href={userData.resume}
-                  target="_blank"
-                  className="bg-blue-100 text-blue-500 rounded px-3 py-1.5 text-sm hover:bg-blue-200 transition-colors"
-                >
-                  View Resume
-                </a>
-              ) : (
-                <span className="bg-blue-100 text-blue-500 rounded px-3 py-1.5 text-sm hover:bg-blue-200 transition-colors">
-                  No resume uploaded
-                </span>
-              )}
-              <button
-                onClick={() => setIsEdit(true)}
-                className="border border-gray-300 rounded px-3 py-1.5 text-sm hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                {userData?.resume ? "Update" : "Upload"}
-              </button>
-            </div>
-          )}
-        </div>
+                {profileLoading ? (
+                  <div className="py-10 flex justify-center">
+                    <LoaderCircle className="animate-spin h-6 w-6 text-indigo-600" />
+                  </div>
+                ) : (
+                  <>
+                    {!resumeProfile || isEdit ? (
+                      <div className="space-y-4">
+                        <div 
+                          className="border-2 border-dashed border-indigo-200 rounded-xl p-8 text-center hover:bg-indigo-50/50 transition-colors cursor-pointer"
+                          onClick={() => document.getElementById('resume-upload').click()}
+                        >
+                          <UploadCloud className="h-10 w-10 text-indigo-400 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            {resumeFile ? resumeFile.name : "Click to select resume"}
+                          </p>
+                          <p className="text-xs text-gray-500">PDF up to 5MB</p>
+                          <input
+                            id="resume-upload"
+                            type="file"
+                            hidden
+                            accept="application/pdf"
+                            onChange={(e) => setResumeFile(e.target.files?.[0] || null)}
+                          />
+                        </div>
 
-        {/* Applications Table */}
-        {applicationsLoading ? (
-          <div className="flex justify-center items-center mt-20">
-            <Loader />
-          </div>
-        ) : !userApplication || userApplication.length === 0 ? (
-          <p className="text-center text-gray-500">No applications found.</p>
-        ) : (
-          <>
-            <h1 className="text-lg font-medium mb-3">Jobs Applied</h1>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Company
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Job Title
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                        Location
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {[...userApplication].reverse().map((job) => (
-                      <tr key={job._id} className="hover:bg-gray-50">
-                        <td className="px-4 py-4">
-                          <div className="flex items-center">
-                            <img
-                              src={
-                                job?.companyId?.image || assets.default_profile
-                              }
-                              alt={job?.companyId?.name || "Company logo"}
-                              className="h-8 w-8 rounded-full object-cover flex-shrink-0"
-                              onError={(e) => {
-                                e.target.src = assets.default_profile;
-                              }}
-                            />
-                            <span className="ml-3 text-sm font-medium text-gray-900 truncate max-w-[150px]">
-                              {job?.companyId?.name || "Unknown"}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-900 max-w-[200px] truncate">
-                          {job?.jobId?.title}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500 hidden sm:table-cell">
-                          {job?.jobId?.location}
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell">
-                          {moment(job.date).format("ll")}
-                        </td>
-                        <td className="px-4 py-4">
-                          <span
-                            className={`px-2 inline-flex text-xs font-semibold ${
-                              job.status === "Pending"
-                                ? "text-blue-500"
-                                : job.status === "Rejected"
-                                ? "text-red-500"
-                                : "text-green-500"
+                        <div className="flex gap-2">
+                          <button
+                            disabled={!resumeFile || uploadLoading}
+                            onClick={handleResumeSave}
+                            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-medium transition-all shadow-sm ${
+                              !resumeFile || uploadLoading
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                : "bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] shadow-indigo-200 cursor-pointer"
                             }`}
                           >
-                            {job.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                            {uploadLoading ? (
+                              <><LoaderCircle className="animate-spin w-4 h-4" /> Analyzing...</>
+                            ) : (
+                              "Upload & Parse"
+                            )}
+                          </button>
+                          
+                          {resumeProfile && isEdit && (
+                            <button
+                              onClick={() => { setIsEdit(false); setResumeFile(null); }}
+                              className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-5">
+                        <div className="bg-green-50 border border-green-100 rounded-lg p-3 flex items-center gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <div>
+                            <p className="text-sm font-medium text-green-800">Profile Active</p>
+                            <p className="text-xs text-green-600">AI is matching you to jobs</p>
+                          </div>
+                        </div>
+
+                        {resumeProfile.summary && (
+                          <div>
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Summary</h4>
+                            <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg border border-gray-100 line-clamp-4">
+                              {resumeProfile.summary}
+                            </p>
+                          </div>
+                        )}
+
+                        {resumeProfile.skills && resumeProfile.skills.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Top Skills</h4>
+                            <div className="flex flex-wrap gap-1.5">
+                              {resumeProfile.skills.map(skill => (
+                                <span key={skill} className="px-2 py-1 bg-indigo-50 text-indigo-700 text-xs rounded-md font-medium">
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => setIsEdit(true)}
+                          className="w-full py-2 border-2 border-indigo-100 text-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-50 transition-colors"
+                        >
+                          Update Resume
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-          </>
-        )}
-      </section>
+
+            {/* Right Column: Applications Table */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h2 className="text-xl font-bold text-gray-900">Application History</h2>
+                  <p className="text-sm text-gray-500">Track your job applications and status</p>
+                </div>
+
+                {applicationsLoading ? (
+                  <div className="flex justify-center items-center py-20">
+                    <LoaderCircle className="animate-spin h-8 w-8 text-indigo-600" />
+                  </div>
+                ) : !userApplication || userApplication.length === 0 ? (
+                  <div className="text-center py-16 px-6">
+                    <div className="bg-gray-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <FileText className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">No applications yet</h3>
+                    <p className="text-gray-500">When you apply for jobs, they will appear here.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-100">
+                      <thead className="bg-gray-50/80">
+                        <tr>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Company
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Role
+                          </th>
+                          <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
+                            Date Applied
+                          </th>
+                          <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-50">
+                        {[...userApplication].reverse().map((app) => (
+                          <tr key={app.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="h-9 w-9 bg-gray-50 rounded-lg border border-gray-100 flex items-center justify-center p-1.5 flex-shrink-0">
+                                  <img
+                                    src={assets.company_icon}
+                                    alt="Company logo"
+                                    className="h-full w-full object-contain"
+                                  />
+                                </div>
+                                <span className="ml-3 text-sm font-semibold text-gray-900">
+                                  {app.job?.recruiter?.company_name || "Company"}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{app.job?.title || "Job"}</div>
+                              <div className="text-xs text-gray-500 capitalize">{app.job?.job_type || ""}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                              {moment(app.applied_at).format("MMM D, YYYY")}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <span
+                                className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full capitalize ${
+                                  app.status === "shortlisted"
+                                    ? "bg-green-100 text-green-800"
+                                    : app.status === "rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {app.status || "applied"}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+          </div>
+        </section>
+      </div>
       <Footer />
     </>
   );

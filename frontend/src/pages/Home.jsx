@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Testimonials from "../components/Testimonials";
 import Counter from "../components/Counter";
 import Download from "../components/Download";
+import ChatbotSection from "../components/ChatbotSection";
 import Footer from "../components/Footer";
 import { AppContext } from "../context/AppContext";
 
@@ -25,6 +26,7 @@ const Home = () => {
       <Testimonials />
       <Counter />
       <Download />
+      <ChatbotSection />
       <Footer />
     </>
   );

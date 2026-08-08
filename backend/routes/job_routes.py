@@ -11,7 +11,7 @@ from db.database import get_db
 from db import schemas
 from db.crud import jobs
 from utils.auth import get_current_user, require_student
-from services.job_matching import search_jobs_by_query
+from services.job_matching import search_jobs_by_query, find_matching_jobs
 
 router = APIRouter()
 
@@ -55,6 +55,22 @@ async def search_jobs(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Search failed: {str(e)}"
         )
+
+
+@router.get("/recommended", response_model=List[schemas.JobResponse])
+async def get_recommended_jobs(
+    limit: int = Query(5, le=20),
+    user_id: str = Depends(require_student),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get recommended jobs based on the student's resume embedding."""
+    try:
+        results = await find_matching_jobs(db=db, user_id=user_id, limit=limit)
+        return results
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/{job_id}", response_model=schemas.JobResponse)

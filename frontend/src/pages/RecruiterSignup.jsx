@@ -1,52 +1,39 @@
-import axios from "axios";
-import { LoaderCircle, Lock, Mail, Upload, UserRound } from "lucide-react";
-import React, { useContext, useState } from "react";
-import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom"; // ✅ Added useNavigate
+import { LoaderCircle, Lock, Mail, Building2, Globe } from "lucide-react";
+import React, { useState } from "react";
+import { toast } from "react-hot-toast";
+import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
-import { AppContext } from "../context/AppContext";
+import api from "../utils/api";
 
 const RecruiterSignup = () => {
-  const [companyLogo, setCompanyLogo] = useState(null);
   const [companyName, setCompanyName] = useState("");
-  const [companyId, setCompanyId] = useState("");
   const [email, setEmail] = useState("");
+  const [website, setWebsite] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { backendUrl, setCompanyData } =
-    useContext(AppContext);
   const navigate = useNavigate();
 
-  const recruiterSignup = async (e) => {
+  const recruiterSignupHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`${backendUrl}/company/signup`, {
+      const { data } = await api.post(`/auth/register/recruiter`, {
         company_name: companyName,
-        company_id: companyId,
         email,
+        website,
         password,
       });
 
-      if (data.company_id) {
-        // Store company data in localStorage for now
-        const companyData = {
-          company_id: data.company_id,
-          email: data.email,
-          company_name: data.company_name
-        };
-        localStorage.setItem("companyData", JSON.stringify(companyData));
-        setCompanyData(companyData);
-        toast.success("Account created successfully! Please login.");
+      if (data.id) {
+        toast.success("Company account created successfully! Please login.");
         navigate("/recruiter-login");
-      } else {
-        toast.error("Signup failed");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.detail || "Signup failed.");
+      toast.error(error?.response?.data?.detail || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -55,140 +42,113 @@ const RecruiterSignup = () => {
   return (
     <>
       <Navbar />
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-grow flex items-center justify-center">
-          <div className="w-full max-w-md border border-gray-200 rounded-lg p-6 bg-white shadow">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-gray-700 mb-1.5">
-                Recruiter Sign Up
+      <div className="flex flex-col min-h-screen bg-gray-50/50">
+        <main className="flex-grow flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8"
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                Company Signup
               </h1>
-              <p className="text-sm text-gray-600">
-                Welcome! Please create an account to continue
+              <p className="text-sm text-gray-500">
+                Join CareerPilot to hire top talent instantly
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={recruiterSignup}>
-              {/* Logo Upload */}
-              <div className="flex flex-col items-center mb-4">
-                <label className="relative cursor-pointer flex items-center justify-between flex-col">
-                  <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-dashed border-gray-300 hover:border-blue-500 transition-colors">
-                    {companyLogo ? (
-                      <img
-                        src={URL.createObjectURL(companyLogo)}
-                        alt="Company logo preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Upload className="h-5 w-5 text-gray-400" />
-                    )}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => setCompanyLogo(e.target.files[0])}
-                      required
-                    />
-                  </div>
-                  <span className="block text-xs mt-2 text-gray-500">
-                    {companyLogo ? "Change logo" : "Upload company logo"}
+            <form className="space-y-4" onSubmit={recruiterSignupHandler}>
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Building2 className="h-5 w-5 text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  placeholder="Company Name"
+                  className="w-full outline-none text-sm bg-transparent"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Mail className="h-5 w-5 text-gray-400 mr-3" />
+                <input
+                  type="email"
+                  placeholder="Company Email Address"
+                  className="w-full outline-none text-sm bg-transparent"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Globe className="h-5 w-5 text-gray-400 mr-3" />
+                <input
+                  type="url"
+                  placeholder="Website URL (Optional)"
+                  className="w-full outline-none text-sm bg-transparent"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
+
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Lock className="h-5 w-5 text-gray-400 mr-3" />
+                <input
+                  type="password"
+                  placeholder="Password (min 8 characters)"
+                  className="w-full outline-none text-sm bg-transparent"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                    required
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <Link to="/terms" className="text-indigo-600 hover:underline">
+                      Terms and Conditions
+                    </Link>
                   </span>
                 </label>
               </div>
 
-              {/* Form Fields */}
-              <div className="space-y-3">
-                <div className="border border-gray-300 rounded flex items-center p-2.5">
-                  <UserRound className="h-5 w-5 text-gray-400 mr-2" />
-                  <input
-                    type="text"
-                    placeholder="Company name"
-                    className="w-full outline-none text-sm bg-transparent"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="border border-gray-300 rounded flex items-center p-2.5">
-                  <Mail className="h-5 w-5 text-gray-400 mr-2" />
-                  <input
-                    type="text"
-                    placeholder="Company ID"
-                    className="w-full outline-none text-sm bg-transparent"
-                    value={companyId}
-                    onChange={(e) => setCompanyId(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="border border-gray-300 rounded flex items-center p-2.5">
-                  <Mail className="h-5 w-5 text-gray-400 mr-2" />
-                  <input
-                    type="email"
-                    placeholder="Email id"
-                    className="w-full outline-none text-sm bg-transparent"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="border border-gray-300 rounded flex items-center p-2.5">
-                  <Lock className="h-5 w-5 text-gray-400 mr-2" />
-                  <input
-                    type="password"
-                    placeholder="Create password"
-                    className="w-full outline-none text-sm bg-transparent"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Terms */}
-              <label
-                htmlFor="terms-checkbox"
-                className="text-sm text-gray-600 flex items-center gap-2 cursor-pointer"
-              >
-                <input
-                  id="terms-checkbox"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 rounded border-gray-300"
-                  required
-                />
-                I agree to the{" "}
-                <Link to="/terms" className="text-blue-600 hover:underline">
-                  Terms and Conditions
-                </Link>
-              </label>
-
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition flex justify-center items-center cursor-pointer ${
-                  loading ? "cursor-not-allowed opacity-50" : ""
+                className={`w-full bg-indigo-900 text-white py-3 px-4 mt-2 rounded-xl hover:bg-indigo-950 active:scale-[0.98] transition-all flex justify-center items-center font-medium shadow-sm shadow-indigo-900/20 ${
+                  loading ? "cursor-not-allowed opacity-70" : ""
                 }`}
               >
                 {loading ? (
                   <LoaderCircle className="animate-spin h-5 w-5" />
                 ) : (
-                  "Create Account"
+                  "Register Company"
                 )}
               </button>
 
-              <div className="text-center text-sm text-gray-600 pt-2">
+              <div className="text-center text-sm text-gray-600 pt-4">
                 Already have an account?{" "}
                 <Link
                   to="/recruiter-login"
-                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                  className="text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
                 >
                   Log In
                 </Link>
               </div>
             </form>
-          </div>
+          </motion.div>
         </main>
         <Footer />
       </div>

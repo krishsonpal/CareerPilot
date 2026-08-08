@@ -1,130 +1,93 @@
-import axios from "axios";
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import api from "../utils/api";
 
 export const AppContext = createContext();
 
 export const AppContextProvider = ({ children }) => {
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
-
+  // Global States
   const [searchFilter, setSearchFilter] = useState({ title: "", location: "" });
   const [isSearched, setIsSearched] = useState(false);
+  
   const [jobs, setJobs] = useState([]);
   const [jobLoading, setJobLoading] = useState(false);
 
-  const [userToken, setUserToken] = useState(localStorage.getItem("userToken"));
+  // Authentication States (Unified for Student & Recruiter)
+  // role can be "student" or "recruiter"
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
   const [userData, setUserData] = useState(null);
-  const [userDataLoading, setUserDataLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(!!userToken);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  // Initialize user data from localStorage on mount
-  useEffect(() => {
-    const storedUserData = localStorage.getItem("userData");
-    if (storedUserData && userToken) {
-      setUserData(JSON.parse(storedUserData));
-      console.log("Loaded user data from localStorage:", JSON.parse(storedUserData));
-    }
-  }, []);
-  const [userApplication, setUserApplication] = useState(null);
+  // Application / ATS States
+  const [userApplications, setUserApplications] = useState([]);
   const [applicationsLoading, setApplicationsLoading] = useState(false);
 
-  const [companyToken, setCompanyToken] = useState(
-    localStorage.getItem("companyToken")
-  );
-  const [companyData, setCompanyData] = useState(null);
-  const [isCompanyLogin, setIsCompanyLogin] = useState(!!companyToken);
-  const [companyLoading, setIsCompanyLoading] = useState(false);
+  // ------------------------------------------------------------------------
+  // Effects & Lifecycle
+  // ------------------------------------------------------------------------
 
-  // Initialize company data from localStorage on mount
+  // Update localStorage when token/role changes
   useEffect(() => {
-    const storedCompanyData = localStorage.getItem("companyData");
-    if (storedCompanyData && companyToken) {
-      setCompanyData(JSON.parse(storedCompanyData));
-      console.log("Loaded company data from localStorage:", JSON.parse(storedCompanyData));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (userToken) {
-      localStorage.setItem("userToken", userToken);
+    if (token && userRole) {
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", userRole);
     } else {
-      localStorage.removeItem("userToken");
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
     }
-  }, [userToken]);
+  }, [token, userRole]);
 
+  // Load User Data & Initial Data on Mount or Token Change
   useEffect(() => {
-    if (companyToken) {
-      localStorage.setItem("companyToken", companyToken);
-    } else {
-      localStorage.removeItem("companyToken");
-    }
-  }, [companyToken]);
-
-  const fetchUserData = async () => {
-    if (!userToken) return;
-    setUserDataLoading(true);
-    try {
-      const { data } = await axios.get(`${backendUrl}/student/user-info`, {
-        headers: { Authorization: `Bearer ${userToken}` },
-      });
-      if (data) {
-        setUserData({
-          student_id: data.student_id,
-          message: data.message,
-          has_resume_summary: !!data.has_resume_summary
-        });
+    const initApp = async () => {
+      setIsAuthLoading(true);
+      if (token) {
+        await fetchUserProfile();
+      } else {
+        setUserData(null);
       }
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.detail || "Failed to fetch user data."
-      );
-    } finally {
-      setUserDataLoading(false);
-    }
-  };
+      setIsAuthLoading(false);
+      // Fetch public jobs regardless of auth
+      fetchJobsData();
+    };
+    initApp();
+  }, [token]);
 
-  const fetchCompanyData = async () => {
-    if (!companyToken) return;
-    setIsCompanyLoading(true);
+
+  // ------------------------------------------------------------------------
+  // API Calls
+  // ------------------------------------------------------------------------
+
+  const fetchUserProfile = async () => {
     try {
-      // For now, we'll store company data in localStorage since FastAPI doesn't have a company data endpoint yet
-      const storedCompanyData = localStorage.getItem("companyData");
-      if (storedCompanyData) {
-        setCompanyData(JSON.parse(storedCompanyData));
-      }
+      const { data } = await api.get("/auth/me");
+      setUserData(data);
     } catch (error) {
-      toast.error(
-        error?.response?.data?.detail || "Failed to fetch company data."
-      );
-    } finally {
-      setIsCompanyLoading(false);
+      console.error("Failed to fetch user profile", error);
+      // If 401, the interceptor will clear the token and reload
     }
   };
 
   const fetchJobsData = async () => {
     setJobLoading(true);
     try {
-      const { data } = await axios.get(`${backendUrl}/company/internships`);
-      if (data.internships) {
-        setJobs(data.internships);
-      } else {
-        toast.error("Failed to fetch internships");
-      }
+      // Use the public jobs endpoint
+      const { data } = await api.get("/jobs");
+      setJobs(data || []);
     } catch (error) {
-      toast.error(error?.response?.data?.detail || "Failed to fetch internships.");
+      toast.error(error?.response?.data?.detail || "Failed to fetch jobs.");
     } finally {
       setJobLoading(false);
     }
   };
 
-  const fetchUserApplication = async () => {
+  const fetchUserApplications = async () => {
+    if (!token || userRole !== "student") return;
     try {
       setApplicationsLoading(true);
-      // For now, we'll store applications in localStorage since FastAPI doesn't have this endpoint yet
-      const storedApplications = localStorage.getItem("userApplications");
-      if (storedApplications) {
-        setUserApplication(JSON.parse(storedApplications));
-      }
+      const { data } = await api.get("/applications/me");
+      setUserApplications(data || []);
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Failed to fetch applications");
     } finally {
@@ -132,48 +95,16 @@ export const AppContextProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    if (localStorage.getItem("userToken")) {
-      fetchUserApplication();
-    }
-  }, []);
+  const logout = () => {
+    setToken(null);
+    setUserRole(null);
+    setUserData(null);
+    toast.success("Logged out successfully");
+  };
 
-  useEffect(() => {
-    fetchJobsData();
-  }, []);
-
-  useEffect(() => {
-    if (userToken) {
-      setIsLogin(true);
-      // Load user data from localStorage first
-      const storedUserData = localStorage.getItem("userData");
-      if (storedUserData) {
-        setUserData(JSON.parse(storedUserData));
-      }
-      // Optionally fetch additional data from server
-      // fetchUserData();
-    } else {
-      setUserData(null);
-      setIsLogin(false);
-    }
-  }, [userToken]);
-
-  useEffect(() => {
-    if (companyToken) {
-      setIsCompanyLogin(true);
-      // Load company data from localStorage first
-      const storedCompanyData = localStorage.getItem("companyData");
-      if (storedCompanyData) {
-        setCompanyData(JSON.parse(storedCompanyData));
-      }
-      // Optionally fetch additional data from server
-      // fetchCompanyData();
-    } else {
-      setCompanyData(null);
-      setIsCompanyLogin(false);
-    }
-  }, [companyToken]);
-
+  // ------------------------------------------------------------------------
+  // Context Value
+  // ------------------------------------------------------------------------
   const value = {
     // Search
     searchFilter,
@@ -187,31 +118,30 @@ export const AppContextProvider = ({ children }) => {
     jobLoading,
     fetchJobsData,
 
-    // Backend
-    backendUrl,
-
-    // User
-    userToken,
-    setUserToken,
+    // Authentication (Unified)
+    token,
+    setToken,
+    userRole,
+    setUserRole,
     userData,
     setUserData,
-    userDataLoading,
-    isLogin,
-    setIsLogin,
-    fetchUserData,
+    isAuthLoading,
+    fetchUserProfile,
+    logout,
+    
+    // Legacy support (to avoid breaking current pages immediately during migration)
+    userToken: userRole === "student" ? token : null,
+    setUserToken: (t) => { setToken(t); setUserRole("student"); },
+    companyToken: userRole === "recruiter" ? token : null,
+    setCompanyToken: (t) => { setToken(t); setUserRole("recruiter"); },
+    isLogin: !!token && userRole === "student",
+    isCompanyLogin: !!token && userRole === "recruiter",
+    companyData: userRole === "recruiter" ? userData : null,
 
-    // Company
-    companyToken,
-    setCompanyToken,
-    companyData,
-    setCompanyData,
-    isCompanyLogin,
-    setIsCompanyLogin,
-    fetchCompanyData,
-    companyLoading,
-    userApplication,
+    // Applications
+    userApplication: userApplications, // Keep singular naming for legacy component compatibility
     applicationsLoading,
-    fetchUserApplication
+    fetchUserApplication: fetchUserApplications
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

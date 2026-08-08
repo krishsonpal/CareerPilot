@@ -1,61 +1,41 @@
-import axios from "axios";
 import { LoaderCircle, Lock, Mail } from "lucide-react";
 import React, { useContext, useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { AppContext } from "../context/AppContext";
+import api from "../utils/api";
 
 const RecruiterLogin = () => {
-  const [companyId, setCompanyId] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { backendUrl, setCompanyData, setCompanyToken } =
-    useContext(AppContext);
   const navigate = useNavigate();
+  const { setToken, setUserRole } = useContext(AppContext);
 
-  const recruiterLogin = async (e) => {
+  const recruiterLoginHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      const { data } = await axios.post(`${backendUrl}/company/login`, {
-        company_id: companyId,
+      const { data } = await api.post(`/auth/login/recruiter`, {
+        email,
         password,
       });
 
-      console.log("Company login response:", data); // Debug log
-
       if (data.access_token) {
-        // Store token and company data
-        localStorage.setItem("companyToken", data.access_token);
-        localStorage.setItem("companyData", JSON.stringify({
-          company_id: data.user_id,
-          user_type: data.user_type
-        }));
+        setToken(data.access_token);
+        setUserRole(data.role); // "recruiter"
         
-        // Update context
-        setCompanyToken(data.access_token);
-        setCompanyData({
-          company_id: data.user_id,
-          user_type: data.user_type
-        });
-        
-        console.log("Company login successful, navigating to dashboard...");
         toast.success("Login successful!");
-        
-        // Small delay to ensure state is updated
         setTimeout(() => {
           navigate("/dashboard");
         }, 100);
-      } else {
-        toast.error("Login failed - no access token received");
       }
     } catch (error) {
-      console.error("Company login error:", error); // Debug log
-      toast.error(error?.response?.data?.detail || "Login failed");
+      toast.error(error?.response?.data?.detail || "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -64,37 +44,42 @@ const RecruiterLogin = () => {
   return (
     <>
       <Navbar />
-      <div className="flex-col">
-        <main className="flex-grow flex items-center justify-center">
-          <div className="w-full max-w-md border border-gray-200 rounded-lg p-6 bg-white">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-semibold text-gray-700 mb-1">
+      <div className="flex flex-col min-h-screen bg-gray-50/50">
+        <main className="flex-grow flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8"
+          >
+            <div className="text-center mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 Recruiter Login
               </h1>
-              <p className="text-sm text-gray-600">
-                Welcome back! Please login to continue
+              <p className="text-sm text-gray-500">
+                Welcome back! Please login to your company dashboard
               </p>
             </div>
 
-            <form className="space-y-4" onSubmit={recruiterLogin}>
-              <div className="border border-gray-300 rounded flex items-center p-2.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
-                <Mail className="h-5 w-5 text-gray-400 mr-2" />
+            <form className="space-y-5" onSubmit={recruiterLoginHandler}>
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Mail className="h-5 w-5 text-gray-400 mr-3" />
                 <input
-                  type="text"
-                  placeholder="Company ID"
-                  className="w-full outline-none text-sm"
-                  value={companyId}
-                  onChange={(e) => setCompanyId(e.target.value)}
+                  type="email"
+                  placeholder="Company Email"
+                  className="w-full outline-none text-sm bg-transparent"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="border border-gray-300 rounded flex items-center p-2.5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
-                <Lock className="h-5 w-5 text-gray-400 mr-2" />
+              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
+                <Lock className="h-5 w-5 text-gray-400 mr-3" />
                 <input
                   type="password"
                   placeholder="Password"
-                  className="w-full outline-none text-sm"
+                  className="w-full outline-none text-sm bg-transparent"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -105,38 +90,38 @@ const RecruiterLogin = () => {
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                    required
+                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                   />
                   <span className="text-sm text-gray-600">Remember me</span>
                 </label>
+                <a href="#" className="text-sm text-indigo-600 hover:text-indigo-700 hover:underline">Forgot password?</a>
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition flex justify-center items-center ${
-                  loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                className={`w-full bg-indigo-900 text-white py-3 px-4 rounded-xl hover:bg-indigo-950 active:scale-[0.98] transition-all flex justify-center items-center font-medium shadow-sm shadow-indigo-900/20 ${
+                  loading ? "cursor-not-allowed opacity-70" : ""
                 }`}
               >
                 {loading ? (
                   <LoaderCircle className="animate-spin h-5 w-5" />
                 ) : (
-                  "Login"
+                  "Log In as Recruiter"
                 )}
               </button>
 
-              <div className="text-center text-sm text-gray-600 mt-2">
+              <div className="text-center text-sm text-gray-600 mt-6">
                 Don't have an account?{" "}
                 <Link
                   to="/recruiter-signup"
-                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                  className="text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
                 >
                   Sign Up
                 </Link>
               </div>
             </form>
-          </div>
+          </motion.div>
         </main>
         <Footer />
       </div>
