@@ -1,0 +1,8 @@
+Hostname : dpg-d391sebe5dus73ahqqgg-a 
+Port : 5432 
+Database : internships_po72 
+Username : internships_po72_user 
+password : lN5zrJTQkaXygUV0a4Nt5kg3NbLWueC4
+Internal Database URL : postgresql://internships_po72_user:lN5zrJTQkaXygUV0a4Nt5kg3NbLWueC4@dpg-d391sebe5dus73ahqqgg-a/internships_po72 
+External Database URL : postgresql://internships_po72_user:lN5zrJTQkaXygUV0a4Nt5kg3NbLWueC4@dpg-d391sebe5dus73ahqqgg-a.oregon-postgres.render.com/internships_po72 
+PSQL Command : PGPASSWORD=lN5zrJTQkaXygUV0a4Nt5kg3NbLWueC4 psql -h dpg-d391sebe5dus73ahqqgg-a.oregon-postgres.render.com -U internships_po72_user internships_po72 

@@ -1,0 +1,58 @@
+# =============================================
+# Render Deployment Configuration — CareerPilot
+# Backend: FastAPI on Render Web Service
+# =============================================
+
+services:
+  - type: web
+    name: careerpilot-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: oregon           # Choose: oregon | frankfurt | singapore
+    plan: free               # free tier to start; upgrade for always-on
+    branch: main
+
+    # Health check — Render uses this to determine if deploy succeeded
+    healthCheckPath: /healthz
+
+    # Environment variables (set sensitive ones in Render dashboard)
+    envVars:
+      - key: APP_ENV
+        value: production
+
+      - key: APP_NAME
+        value: CareerPilot
+
+      - key: APP_VERSION
+        value: 2.0.0
+
+      - key: PORT
+        value: 8000
+
+      # ⬇ Set these in the Render dashboard (Secrets), NOT here
+      - key: GOOGLE_API_KEY
+        sync: false
+
+      - key: DATABASE_URL
+        sync: false
+
+      - key: JWT_SECRET_KEY
+        sync: false
+
+      - key: CORS_ORIGINS
+        sync: false
+
+      - key: GEMINI_LLM_MODEL
+        value: gemini-2.0-flash
+
+      - key: GEMINI_EMBEDDING_MODEL
+        value: models/text-embedding-004
+
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "10"

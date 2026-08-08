@@ -1,0 +1,40 @@
+# =============================================
+# CareerPilot Backend — Python Dependencies
+# Deployment: Render (Docker) + Neon DB
+# LLM/Embeddings: Google Gemini ONLY
+# =============================================
+
+# --- Web Framework ---
+fastapi>=0.111.0
+uvicorn[standard]>=0.29.0
+
+# --- Database (Neon DB / PostgreSQL) ---
+sqlalchemy[asyncio]>=2.0.30
+asyncpg>=0.29.0             # Async PostgreSQL driver (runtime)
+psycopg2-binary>=2.9.9      # Sync driver for Alembic migrations
+pgvector>=0.3.2             # pgvector SQLAlchemy integration
+alembic>=1.13.1             # Database migrations
+
+# --- Pydantic & Validation ---
+pydantic[email]>=2.7.0
+pydantic-settings>=2.3.0
+
+# --- AI / LLM (Google Gemini ONLY — no fallbacks) ---
+# google-genai is the current official Python SDK (google-generativeai is deprecated)
+google-genai>=1.0.0
+langchain>=0.2.0
+langchain-google-genai>=1.0.6
+langchain-core>=0.2.0
+google-api-core>=2.19.0
+
+# --- Resume Parsing ---
+PyPDF2>=3.0.1
+pdfplumber>=0.11.0
+
+# --- Authentication & Security ---
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+
+# --- Utilities ---
+python-multipart>=0.0.9     # File uploads
+python-dotenv>=1.0.1        # .env file loading
