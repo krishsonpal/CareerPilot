@@ -14,6 +14,9 @@ from db.crud import resume
 from utils.auth import require_student
 from utils.config import settings
 from services.resume_parser import process_resume_file
+import logging
+
+logger = logging.getLogger(__name__)
 from services.recommendation import process_user_message, get_chat_history
 
 router = APIRouter()
@@ -32,20 +35,29 @@ async def upload_resume(
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
 
-    # Save file temporarily
-    os.makedirs(settings.upload_dir, exist_ok=True)
-    temp_path = os.path.join(settings.upload_dir, f"{user_id}_{file.filename}")
+    # Create static directory if it doesn't exist
+    static_dir = os.path.join(os.getcwd(), "static", "resumes")
+    os.makedirs(static_dir, exist_ok=True)
+    
+    # Save file permanently to static folder
+    safe_filename = file.filename.replace(" ", "_")
+    file_path = os.path.join(static_dir, f"{user_id}_{safe_filename}")
+    resume_url = f"/static/resumes/{user_id}_{safe_filename}"
     
     try:
         content = await file.read()
         if len(content) > settings.max_upload_size_mb * 1024 * 1024:
              raise HTTPException(status_code=400, detail="File too large")
              
-        with open(temp_path, "wb") as f:
+        with open(file_path, "wb") as f:
             f.write(content)
 
         # Process with AI
-        profile_data = process_resume_file(temp_path)
+        try:
+            profile_data = process_resume_file(file_path)
+        except Exception as ai_err:
+            logger.error(f"AI parsing failed: {ai_err}")
+            raise HTTPException(status_code=502, detail=f"Failed to process resume with AI. Please check your Gemini API key and internet connection. Error: {str(ai_err)}")
 
         # Save to DB
         profile = await resume.save_resume_profile(
@@ -58,13 +70,14 @@ async def upload_resume(
             education=profile_data["education"],
             experience=profile_data["experience"],
             projects=profile_data["projects"],
+            resume_url=resume_url,
         )
         return profile
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Resume upload error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
 
 
 @router.get("/resume", response_model=schemas.ResumeProfileResponse)

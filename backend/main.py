@@ -6,7 +6,9 @@ Phase 1: Foundation stub — routes will be added in Phase 4
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import logging
+import os
 
 from utils.config import settings
 from db.database import create_pgvector_extension
@@ -62,6 +64,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------------------------------------------------------------------
+# Static Files (Resumes)
+# ---------------------------------------------------------------------------
+os.makedirs(os.path.join(os.getcwd(), "static", "resumes"), exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # ---------------------------------------------------------------------------
 # Health Check

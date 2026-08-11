@@ -164,7 +164,7 @@ const Applications = () => {
                         )}
 
                         {resumeProfile.skills && resumeProfile.skills.length > 0 && (
-                          <div>
+                          <div className="mb-4">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Top Skills</h4>
                             <div className="flex flex-wrap gap-1.5">
                               {resumeProfile.skills.map(skill => (
@@ -175,13 +175,25 @@ const Applications = () => {
                             </div>
                           </div>
                         )}
-
-                        <button
-                          onClick={() => setIsEdit(true)}
-                          className="w-full py-2 border-2 border-indigo-100 text-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-50 transition-colors"
-                        >
-                          Update Resume
-                        </button>
+                        
+                        <div className="flex gap-3">
+                          {resumeProfile.resume_url && (
+                            <a
+                              href={import.meta.env.VITE_API_BASE_URL ? `${import.meta.env.VITE_API_BASE_URL.replace('/api', '')}${resumeProfile.resume_url}` : `http://localhost:8000${resumeProfile.resume_url}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 py-2 text-center bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors"
+                            >
+                              View PDF
+                            </a>
+                          )}
+                          <button
+                            onClick={() => setIsEdit(true)}
+                            className="flex-1 py-2 border-2 border-indigo-100 text-indigo-600 rounded-xl text-sm font-medium hover:bg-indigo-50 transition-colors"
+                          >
+                            Update
+                          </button>
+                        </div>
                       </div>
                     )}
                   </>

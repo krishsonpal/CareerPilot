@@ -32,9 +32,9 @@ class Settings(BaseSettings):
     # Google Gemini API — ONLY AI provider, no fallback
     # ------------------------------------------------------------------
     google_api_key: str = Field(..., alias="GOOGLE_API_KEY")
-    gemini_llm_model: str = Field(default="gemini-2.0-flash", alias="GEMINI_LLM_MODEL")
+    gemini_llm_model: str = Field(default="gemini-flash-latest", alias="GEMINI_LLM_MODEL")
     gemini_embedding_model: str = Field(
-        default="text-embedding-004", alias="GEMINI_EMBEDDING_MODEL"
+        default="models/gemini-embedding-001", alias="GEMINI_EMBEDDING_MODEL"
     )
     gemini_embedding_dim: int = Field(default=768, alias="GEMINI_EMBEDDING_DIM")
 

@@ -36,12 +36,25 @@ def _get_client() -> genai.Client:
     return _client
 
 
+def _get_embedding_model_name() -> str:
+    model = settings.gemini_embedding_model.strip()
+    # Map Google AI Studio UI display names to API model identifiers
+    clean_name = model.lower().replace("-", " ").replace("_", " ")
+    if "gemini embedding 1" in clean_name:
+        return "models/gemini-embedding-001"
+    if "gemini embedding 2" in clean_name:
+        return "models/gemini-embedding-2"
+    if not model.startswith("models/"):
+        return f"models/{model}"
+    return model
+
+
 # ---------------------------------------------------------------------------
 # 1. Text Embedding  →  768-dim vector
 # ---------------------------------------------------------------------------
 def embed_text(text: str) -> List[float]:
     """
-    Embed a single text string using Gemini text-embedding-004.
+    Embed a single text string using Gemini Embedding model.
 
     Args:
         text: Input text to embed (resume summary, job description, query, etc.)
@@ -53,9 +66,11 @@ def embed_text(text: str) -> List[float]:
         google.genai.errors.APIError: on Gemini API failure (no fallback).
     """
     client = _get_client()
+    config = genai_types.EmbedContentConfig(output_dimensionality=settings.gemini_embedding_dim)
     response = client.models.embed_content(
-        model=settings.gemini_embedding_model,
+        model=_get_embedding_model_name(),
         contents=text,
+        config=config,
     )
     vector: List[float] = response.embeddings[0].values
     logger.debug("embed_text: produced vector dim=%d", len(vector))
@@ -78,9 +93,11 @@ def embed_batch(texts: List[str]) -> List[List[float]]:
         return []
 
     client = _get_client()
+    config = genai_types.EmbedContentConfig(output_dimensionality=settings.gemini_embedding_dim)
     response = client.models.embed_content(
-        model=settings.gemini_embedding_model,
+        model=_get_embedding_model_name(),
         contents=texts,
+        config=config,
     )
     vectors = [emb.values for emb in response.embeddings]
     logger.debug("embed_batch: embedded %d texts", len(vectors))

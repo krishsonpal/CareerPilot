@@ -41,7 +41,7 @@ const AddJob = () => {
     setLoading(true);
 
     try {
-      const { data } = await api.post(`/jobs`, {
+      const { data } = await api.post(`/recruiter/jobs`, {
         title,
         description,
         skills_required: skillsArray,
