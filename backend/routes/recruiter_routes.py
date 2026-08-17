@@ -1,6 +1,16 @@
 """
 CareerPilot — Recruiter Routes
 Handles job creation, editing, and applicant management for companies.
+
+Job embedding flow (async via BullMQ):
+  POST /api/recruiter/jobs
+    → saves job to DB immediately (embedding = null)
+    → enqueues 'job-embed' job to BullMQ worker
+    → returns 201 Created instantly (< 100ms)
+
+The worker generates the 768-dim Gemini vector and updates jobs.embedding.
+Until the worker completes, the job will appear in listings but not in
+vector search results (this window is typically < 5 seconds).
 """
 
 from typing import List
@@ -11,7 +21,10 @@ from db.database import get_db
 from db import schemas
 from db.crud import jobs, applications
 from utils.auth import require_recruiter
-from services.gemini_service import embed_text
+from utils.queue import enqueue_job_embed
+
+import logging
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -25,15 +38,14 @@ async def create_new_job(
     company_id: str = Depends(require_recruiter),
     db: AsyncSession = Depends(get_db)
 ):
-    """Post a new job. Automatically generates embeddings for matching."""
-    # Generate embedding
-    try:
-        combined_text = f"{job_data.title}\n{job_data.description}\nSkills: {', '.join(job_data.skills_required)}"
-        embedding = embed_text(combined_text)
-    except Exception as e:
-        # We can still save the job even if embedding fails, it just won't be semantic-searchable yet
-        embedding = None
-        
+    """
+    Post a new job listing.
+
+    Returns 201 Created immediately.
+    The Gemini vector embedding is generated asynchronously by the BullMQ worker.
+    The job will become semantically searchable once the worker finishes (typically < 5s).
+    """
+    # Save job immediately — no embedding yet (worker handles it)
     job = await jobs.create_job(
         db=db,
         company_id=company_id,
@@ -49,8 +61,26 @@ async def create_new_job(
         experience_level=job_data.experience_level,
         openings=job_data.openings,
         deadline=job_data.deadline,
-        embedding=embedding
+        embedding=None  # Will be populated asynchronously by the BullMQ worker
     )
+
+    # Enqueue embedding generation to BullMQ worker (non-blocking)
+    combined_text = (
+        f"{job_data.title}\n"
+        f"{job_data.description}\n"
+        f"Skills: {', '.join(job_data.skills_required)}"
+    )
+    try:
+        await enqueue_job_embed(job_id=str(job.id), combined_text=combined_text)
+        logger.info("Enqueued job-embed for job_id=%s", job.id)
+    except RuntimeError as exc:
+        # Non-fatal: job is saved and active, just not semantically searchable yet
+        logger.warning(
+            "Could not enqueue job-embed (worker unavailable): %s. "
+            "Job %s saved without embedding — run worker to fix.",
+            exc, job.id
+        )
+
     return job
 
 
@@ -77,8 +107,7 @@ async def update_job_details(
     company_id: str = Depends(require_recruiter),
     db: AsyncSession = Depends(get_db)
 ):
-    """Update a job posting."""
-    # If title, description or skills change, we should re-embed. For now, omit re-embed for simplicity.
+    """Update a job posting. Re-queues embedding generation if content changed."""
     updated = await jobs.update_job(
         db=db,
         job_id=job_id,
@@ -87,6 +116,22 @@ async def update_job_details(
     )
     if not updated:
         raise HTTPException(status_code=404, detail="Job not found or unauthorized.")
+
+    # Re-queue embedding if content-bearing fields changed
+    update_fields = update_data.model_dump(exclude_unset=True)
+    content_fields = {"title", "description", "skills_required"}
+    if content_fields & set(update_fields.keys()):
+        combined_text = (
+            f"{updated.title}\n"
+            f"{updated.description}\n"
+            f"Skills: {', '.join(updated.skills_required or [])}"
+        )
+        try:
+            await enqueue_job_embed(job_id=job_id, combined_text=combined_text)
+            logger.info("Re-queued job-embed for updated job_id=%s", job_id)
+        except RuntimeError as exc:
+            logger.warning("Could not re-enqueue job-embed for job=%s: %s", job_id, exc)
+
     return updated
 
 

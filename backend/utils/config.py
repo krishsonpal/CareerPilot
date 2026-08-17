@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # App Metadata
     # ------------------------------------------------------------------
     app_name: str = Field(default="CareerPilot", alias="APP_NAME")
-    app_version: str = Field(default="2.0.0", alias="APP_VERSION")
+    app_version: str = Field(default="3.0.0", alias="APP_VERSION")
     app_env: str = Field(default="development", alias="APP_ENV")
 
     # ------------------------------------------------------------------
@@ -63,6 +63,16 @@ class Settings(BaseSettings):
     # ------------------------------------------------------------------
     upload_dir: str = Field(default="./temp_uploads", alias="UPLOAD_DIR")
     max_upload_size_mb: int = Field(default=10, alias="MAX_UPLOAD_SIZE_MB")
+
+    # ------------------------------------------------------------------
+    # BullMQ Worker Service
+    # The Node.js BullMQ worker exposes an HTTP server on this URL.
+    # Python submits jobs here rather than pushing to Redis directly,
+    # giving us full BullMQ queue management (retries, priorities, progress).
+    # ------------------------------------------------------------------
+    worker_service_url: str = Field(
+        default="http://localhost:3001", alias="WORKER_SERVICE_URL"
+    )
 
     # ------------------------------------------------------------------
     # Render deployment — server port (Render injects PORT automatically)

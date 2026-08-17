@@ -1,8 +1,9 @@
 services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-internships}
+      POSTGRES_DB: ${POSTGRES_DB:-careerpilot}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
@@ -15,22 +16,69 @@ services:
     ports:
       - "5432:5432"
 
+  # ── Redis (BullMQ queue broker) ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Python FastAPI Backend ──────────────────────────────────────────────────
   backend:
     build:
       context: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://$${POSTGRES_USER:-postgres}:$${POSTGRES_PASSWORD:-postgres}@db:5432/$${POSTGRES_DB:-internships}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-careerpilot}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost}
-      RUN_DB_CREATE_ALL: "true"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      WORKER_SERVICE_URL: http://worker:3001
     ports:
-      - "8080:8080"
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+      worker:
+        condition: service_started
     volumes:
-      - vectorstores:/data/vectorstores
-      - student_vectorstores:/data/student_vectorstores
+      - resume_files:/app/static/resumes
 
+  # ── Node.js BullMQ Worker Service ──────────────────────────────────────────
+  # Asynchronously processes AI jobs enqueued by the Python backend.
+  # Handles: resume parsing, ATS match scoring, job vector embedding.
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-careerpilot}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      GEMINI_LLM_MODEL: ${GEMINI_LLM_MODEL:-gemini-2.0-flash}
+      GEMINI_EMBEDDING_MODEL: ${GEMINI_EMBEDDING_MODEL:-models/gemini-embedding-001}
+      GEMINI_EMBEDDING_DIM: ${GEMINI_EMBEDDING_DIM:-768}
+      WORKER_PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    volumes:
+      - resume_files:/app/static/resumes  # Shared volume: backend writes, worker reads
+
+  # ── React Frontend (Nginx) ──────────────────────────────────────────────────
   frontend:
     build:
       context: ./frontend
@@ -41,7 +89,5 @@ services:
 
 volumes:
   pgdata:
-  vectorstores:
-  student_vectorstores:
-
-
+  redis_data:
+  resume_files:        # Shared between backend (writes resume PDFs) and worker (reads for parsing)

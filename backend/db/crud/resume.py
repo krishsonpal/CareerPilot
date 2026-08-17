@@ -106,3 +106,49 @@ async def has_resume(db: AsyncSession, user_id: str) -> bool:
     """Check whether a user has an uploaded and processed resume."""
     profile = await get_resume_profile(db, user_id)
     return profile is not None and bool(profile.summary)
+
+
+async def create_processing_placeholder(
+    db: AsyncSession,
+    user_id: str,
+    resume_url: str,
+) -> ResumeProfile:
+    """
+    Create a skeleton resume profile with processing_status='processing'.
+
+    Called by the async upload route immediately after saving the file to disk,
+    before the BullMQ worker begins processing. This ensures:
+      - GET /api/ai/resume returns a valid (partial) profile during processing
+      - The worker can perform an upsert without needing to INSERT on conflict
+
+    Args:
+        db:         Async DB session.
+        user_id:    UUID of the student.
+        resume_url: URL path to the saved resume file.
+
+    Returns:
+        The newly created placeholder ResumeProfile.
+    """
+    profile = ResumeProfile(
+        user_id=user_id,
+        summary="",
+        skills=[],
+        embedding=None,
+        raw_text="",
+        education=[],
+        experience=[],
+        projects=[],
+        resume_url=resume_url,
+    )
+    # Set processing_status if the column exists (added in migration 002)
+    if hasattr(profile, "processing_status"):
+        profile.processing_status = "processing"
+
+    db.add(profile)
+    await db.flush()
+    await db.refresh(profile)
+    logger.info(
+        "create_processing_placeholder: created placeholder for user=%s", user_id
+    )
+    return profile
+

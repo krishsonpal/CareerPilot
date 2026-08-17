@@ -1,0 +1,20 @@
+{
+  "name": "careerpilot-worker",
+  "version": "1.0.0",
+  "description": "CareerPilot BullMQ Worker — Async AI task processing via Redis queue",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.1",
+    "bullmq": "^5.26.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.13.3"
+  }
+}
