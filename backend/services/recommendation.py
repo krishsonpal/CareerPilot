@@ -40,25 +40,33 @@ async def _save_chat_message(
 
 
 async def get_chat_history(db: AsyncSession, user_id: str, limit: int = 10) -> List[Dict[str, str]]:
-    """Retrieve recent chat history for context."""
-    # We order by descending to get latest, then reverse to chronological order
+    """Retrieve recent chat history as formatted dicts for Gemini messages."""
     result = await db.execute(
         select(ChatSession)
         .where(ChatSession.user_id == user_id)
         .order_by(ChatSession.created_at.desc())
         .limit(limit)
     )
-    sessions = result.scalars().all()
-    # Reverse to chronological
-    sessions = reversed(sessions)
-    
-    history = []
-    for s in sessions:
-        history.append({
-            "role": s.role,
-            "content": s.content
-        })
-    return history
+    sessions = list(reversed(result.scalars().all()))
+    return [{"role": s.role, "content": s.content} for s in sessions]
+
+
+async def get_chat_history_raw(
+    db: AsyncSession, user_id: str, limit: int = 10
+) -> List[ChatSession]:
+    """
+    Retrieve recent ChatSession ORM objects.
+    Used by the intent vector builder to embed historical assistant messages
+    as context for FAISS multi-vector search.
+    """
+    result = await db.execute(
+        select(ChatSession)
+        .where(ChatSession.user_id == user_id)
+        .order_by(ChatSession.created_at.desc())
+        .limit(limit)
+    )
+    return list(reversed(result.scalars().all()))
+
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +101,7 @@ async def process_user_message(
     # 3. Gather Context
     profile = await resume.get_resume_profile(db, user_id)
     history = await get_chat_history(db, user_id, limit=5)
+    history_raw = await get_chat_history_raw(db, user_id, limit=5)
 
     context_str = "No resume uploaded yet."
     if profile:
@@ -100,18 +109,28 @@ async def process_user_message(
 
     # 4. Handle Specific Intents with Tools/Data
     extra_context = ""
+
     
     if intent == "recommend_jobs" and profile:
         try:
-            # Fetch top 3 matches using vector search
-            matches = await find_matching_jobs(db, user_id, limit=3)
+            # FAISS tri-vector intent search: uses resume + message + chat history
+            matches = await find_matching_jobs(
+                db=db,
+                user_id=user_id,
+                message=message,
+                chat_history=history_raw if history_raw else None,
+                limit=3,
+            )
             if matches:
                 jobs_info = []
                 for m in matches:
-                    jobs_info.append(f"- {m['title']} at Company {m['company_id']} (Match: {m['similarity_score']*100:.0f}%)")
-                extra_context = "\nI found these recommended jobs based on their resume vector:\n" + "\n".join(jobs_info)
+                    jobs_info.append(
+                        f"- {m['title']} ({m.get('job_type','')}, {m.get('location','')}) "
+                        f"— Match: {m['similarity_score']*100:.0f}%"
+                    )
+                extra_context = "\nTop matching jobs based on your profile and query:\n" + "\n".join(jobs_info)
             else:
-                extra_context = "\nI couldn't find any active job postings matching their profile right now."
+                extra_context = "\nNo active job postings matched your profile right now."
         except Exception as e:
             logger.error("Job matching failed during chat: %s", e)
 

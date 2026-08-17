@@ -256,3 +256,61 @@ async def count_jobs_by_company(db: AsyncSession, company_id: str) -> int:
         select(func.count()).where(Job.company_id == company_id)
     )
     return result.scalar_one() or 0
+
+
+async def get_jobs_by_ids(
+    db: AsyncSession,
+    job_ids: List[str],
+) -> List[Dict[str, Any]]:
+    """
+    Batch-fetch job postings by a list of UUIDs, preserving order.
+
+    Used to hydrate FAISS search results: FAISS returns UUIDs, this
+    function fetches the full job data in the same ranked order.
+
+    Args:
+        db:      Async DB session.
+        job_ids: Ordered list of job UUID strings (FAISS result order = rank order).
+
+    Returns:
+        List of job dicts in the same order as job_ids.
+        Jobs that no longer exist (deleted between index build and query) are omitted.
+    """
+    if not job_ids:
+        return []
+
+    result = await db.execute(
+        select(Job).where(Job.id.in_(job_ids))
+    )
+    jobs_by_id: Dict[str, Job] = {
+        str(j.id): j for j in result.scalars().all()
+    }
+
+    # Preserve FAISS rank order (most similar first)
+    ordered = []
+    for rank, job_id in enumerate(job_ids):
+        job = jobs_by_id.get(job_id)
+        if job:
+            ordered.append({
+                "id":               str(job.id),
+                "company_id":       str(job.company_id),
+                "title":            job.title,
+                "description":      job.description,
+                "skills_required":  job.skills_required or [],
+                "job_type":         job.job_type,
+                "location":         job.location,
+                "is_remote":        job.is_remote,
+                "salary_min":       job.salary_min,
+                "salary_max":       job.salary_max,
+                "duration":         job.duration,
+                "experience_level": job.experience_level,
+                "openings":         job.openings,
+                "deadline":         str(job.deadline) if job.deadline else None,
+                "status":           job.status,
+                "created_at":       job.created_at.isoformat() if job.created_at else None,
+                "similarity_score": round(1.0 - (rank / max(len(job_ids), 1)), 4),
+            })
+
+    logger.info("get_jobs_by_ids: returned %d/%d requested jobs", len(ordered), len(job_ids))
+    return ordered
+

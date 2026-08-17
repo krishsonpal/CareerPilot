@@ -1,6 +1,12 @@
 """
-CareerPilot — FastAPI Application Entry Point
-Phase 1: Foundation stub — routes will be added in Phase 4
+CareerPilot — FastAPI Application Entry Point (v3.0)
+
+Startup sequence:
+  1. Enable pgvector extension on Neon DB
+  2. Build in-memory FAISS job index from pgvector embeddings
+  3. Register all API routers
+
+Real-time streaming (Phase 3) will mount Socket.IO here.
 """
 
 from contextlib import asynccontextmanager
@@ -11,7 +17,8 @@ import logging
 import os
 
 from utils.config import settings
-from db.database import create_pgvector_extension
+from db.database import create_pgvector_extension, get_db
+from services.faiss_index import faiss_index
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +30,26 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Application startup / shutdown lifecycle."""
     # ── Startup ──────────────────────────────────────────────────────────
-    logger.info(f"🚀 Starting {settings.app_name} v{settings.app_version}")
-    logger.info(f"   Environment : {settings.app_env}")
+    logger.info("🚀 Starting %s v%s", settings.app_name, settings.app_version)
+    logger.info("   Environment : %s", settings.app_env)
 
-    # Ensure pgvector extension is enabled on Neon DB
+    # Step 1: Ensure pgvector extension is enabled on Neon DB
     await create_pgvector_extension()
+
+    # Step 2: Build FAISS in-memory index from pgvector job embeddings
+    logger.info("[FAISS] Building in-memory job index from pgvector...")
+    try:
+        async for db in get_db():
+            await faiss_index.build_from_db(db)
+            break  # We only need one DB session for the build
+        logger.info(
+            "[FAISS] ✅ Index ready — %d jobs indexed", faiss_index.total_jobs
+        )
+    except Exception as exc:
+        # Non-fatal: FAISS index failure degrades to pgvector-only search
+        logger.warning(
+            "[FAISS] ⚠️  Index build failed: %s — falling back to pgvector-only search", exc
+        )
 
     logger.info("✅ Startup complete — CareerPilot is ready")
     yield
@@ -43,7 +65,8 @@ app = FastAPI(
     title=settings.app_name,
     description=(
         "AI-Powered Recruitment & Career Platform — "
-        "semantic job matching, career guidance, and market-aware skill recommendations."
+        "semantic job matching via FAISS multi-vector intent search, "
+        "async AI processing via BullMQ/Redis, and real-time chat streaming."
     ),
     version=settings.app_version,
     docs_url="/docs",
@@ -65,7 +88,7 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Static Files (Resumes)
+# Static Files (Resume PDFs)
 # ---------------------------------------------------------------------------
 os.makedirs(os.path.join(os.getcwd(), "static", "resumes"), exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -75,23 +98,38 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # ---------------------------------------------------------------------------
 @app.get("/healthz", tags=["Health"])
 async def health_check():
-    """Render health check endpoint — returns 200 if server is up."""
+    """Health check endpoint — includes FAISS index status."""
     return {
         "status": "ok",
         "app": settings.app_name,
         "version": settings.app_version,
         "env": settings.app_env,
+        "faiss_index": {
+            "ready": faiss_index.is_ready,
+            "total_jobs": faiss_index.total_jobs,
+        },
     }
 
 
 @app.get("/api/version", tags=["Health"])
 async def api_version():
-    """Returns API version metadata."""
+    """Returns API version and infrastructure metadata."""
     return {
         "name": settings.app_name,
         "version": settings.app_version,
         "database": "Neon DB (PostgreSQL + pgvector)",
         "ai_provider": "Google Gemini",
+        "vector_search": {
+            "primary": "FAISS IndexFlatIP (in-memory, multi-vector intent)",
+            "fallback": "pgvector cosine similarity",
+            "faiss_ready": faiss_index.is_ready,
+            "indexed_jobs": faiss_index.total_jobs,
+        },
+        "async_queue": {
+            "worker": "BullMQ (Node.js)",
+            "broker": "Redis",
+            "worker_url": settings.worker_service_url,
+        },
     }
 
 
