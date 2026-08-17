@@ -16,9 +16,12 @@ from fastapi.staticfiles import StaticFiles
 import logging
 import os
 
+import socketio
+
 from utils.config import settings
 from db.database import create_pgvector_extension, get_db
 from services.faiss_index import faiss_index
+from sockets.chat_socket import sio  # Import Socket.IO server
 
 logger = logging.getLogger(__name__)
 
@@ -147,3 +150,21 @@ app.include_router(job_router, prefix="/api/jobs", tags=["Jobs"])
 app.include_router(app_router, prefix="/api/applications", tags=["Applications"])
 app.include_router(ai_router, prefix="/api/ai", tags=["AI"])
 app.include_router(recruiter_router, prefix="/api/recruiter", tags=["Recruiter"])
+
+# ---------------------------------------------------------------------------
+# Socket.IO — Wrap FastAPI with Socket.IO ASGI application
+# Both REST endpoints (http) and WebSocket chat (ws) run on the same port.
+# The socket.io client connects to ws://host:8000/socket.io/
+# ---------------------------------------------------------------------------
+
+# Resolve CORS origins from settings for Socket.IO
+_sio_cors_origins = settings.cors_origins if settings.cors_origins else ["*"]
+sio.cors_allowed_origins = _sio_cors_origins
+
+# Wrap FastAPI app — this is the actual ASGI application served by uvicorn
+application = socketio.ASGIApp(
+    socketio_server=sio,
+    other_asgi_app=app,
+    socketio_path="/socket.io",  # Standard path expected by socket.io-client
+)
+

@@ -43,3 +43,6 @@ httpx>=0.27.0               # Async HTTP client for BullMQ worker service bridge
 # --- Vector Search ---
 faiss-cpu>=1.8.0            # In-memory FAISS index for multi-vector intent-aware job matching
 numpy>=1.26.0               # Array math for vector normalization and weighted composites
+
+# --- Real-time Streaming ---
+python-socketio[asyncio_client]>=5.11.0  # Socket.IO ASGI server for streaming AI chat

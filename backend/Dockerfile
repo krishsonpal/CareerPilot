@@ -47,7 +47,7 @@ EXPOSE 8000
 # -----------------------------------------------
 # Start command
 # - 1 worker (Render free tier: 512MB RAM)
-# - uvicorn workers handle async FastAPI
+# - main:application wraps FastAPI + Socket.IO on the same port
 # - host 0.0.0.0 required for Render
 # -----------------------------------------------
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
+CMD ["sh", "-c", "uvicorn main:application --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
