@@ -1,10 +1,8 @@
-import { LoaderCircle, Lock, Mail, Building2, Globe } from "lucide-react";
+import { LoaderCircle, Lock, Mail, Building2, Globe, Eye, EyeOff, ArrowRight } from "lucide-react";
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import Footer from "../components/Footer";
-import Navbar from "../components/Navbar";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import AuthLayout from "../layout/AuthLayout";
 import api from "../utils/api";
 
 const RecruiterSignup = () => {
@@ -12,12 +10,20 @@ const RecruiterSignup = () => {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextParam = searchParams.get("next");
 
   const recruiterSignupHandler = async (e) => {
     e.preventDefault();
+    if (!agreed) {
+      toast.error("Please accept the terms and conditions");
+      return;
+    }
     setLoading(true);
 
     try {
@@ -29,130 +35,165 @@ const RecruiterSignup = () => {
       });
 
       if (data.id) {
-        toast.success("Company account created successfully! Please login.");
-        navigate("/recruiter-login");
+        toast.success("Company registered successfully! Please sign in.");
+        navigate(nextParam ? `/recruiter-login?next=${encodeURIComponent(nextParam)}` : "/recruiter-login");
       }
     } catch (error) {
-      toast.error(error?.response?.data?.detail || "Signup failed");
+      toast.error(error?.response?.data?.detail || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleRoleChange = (role) => {
+    if (role === "candidate") {
+      navigate(nextParam ? `/candidate-signup?next=${encodeURIComponent(nextParam)}` : "/candidate-signup");
+    }
+  };
+
   return (
-    <>
-      <Navbar />
-      <div className="flex flex-col min-h-screen bg-gray-50/50">
-        <main className="flex-grow flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="w-full max-w-md bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-shadow p-8"
+    <AuthLayout
+      title="Register Employer Account"
+      subtitle="Join CareerPilot to publish postings, search talent, and review AI-ranked applicants."
+      activeRole="recruiter"
+      onRoleChange={handleRoleChange}
+    >
+      <form className="space-y-4" onSubmit={recruiterSignupHandler}>
+        
+        {/* Company Name */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Company Name
+          </label>
+          <div className="border border-slate-200 rounded-xl flex items-center px-3.5 py-2.5 bg-slate-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all shadow-xs">
+            <Building2 className="h-4 w-4 text-slate-400 mr-2.5 shrink-0" />
+            <input
+              type="text"
+              placeholder="Acme Technologies Inc."
+              className="w-full outline-none text-sm text-slate-900 bg-transparent placeholder-slate-400 font-medium"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
+        {/* Company Email */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Work Email Address
+          </label>
+          <div className="border border-slate-200 rounded-xl flex items-center px-3.5 py-2.5 bg-slate-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all shadow-xs">
+            <Mail className="h-4 w-4 text-slate-400 mr-2.5 shrink-0" />
+            <input
+              type="email"
+              placeholder="recruiter@acme.com"
+              className="w-full outline-none text-sm text-slate-900 bg-transparent placeholder-slate-400 font-medium"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </div>
+        </div>
+
+        {/* Website (Optional) */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Website URL <span className="text-slate-400 font-normal">(Optional)</span>
+          </label>
+          <div className="border border-slate-200 rounded-xl flex items-center px-3.5 py-2.5 bg-slate-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all shadow-xs">
+            <Globe className="h-4 w-4 text-slate-400 mr-2.5 shrink-0" />
+            <input
+              type="url"
+              placeholder="https://acme.com"
+              className="w-full outline-none text-sm text-slate-900 bg-transparent placeholder-slate-400 font-medium"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Password (min 8 characters)
+          </label>
+          <div className="border border-slate-200 rounded-xl flex items-center px-3.5 py-2.5 bg-slate-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all shadow-xs">
+            <Lock className="h-4 w-4 text-slate-400 mr-2.5 shrink-0" />
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="••••••••"
+              className="w-full outline-none text-sm text-slate-900 bg-transparent placeholder-slate-400 font-medium"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
+              required
+              autoComplete="new-password"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Terms */}
+        <div className="pt-1">
+          <label className="flex items-start gap-2.5 cursor-pointer text-xs text-slate-600">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="h-4 w-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 mt-0.5 cursor-pointer"
+              required
+            />
+            <span>
+              I agree to the{" "}
+              <Link to="/terms" className="text-indigo-600 font-bold hover:underline">
+                Employer Terms
+              </Link>{" "}
+              and{" "}
+              <Link to="/terms" className="text-indigo-600 font-bold hover:underline">
+                Privacy Policy
+              </Link>
+            </span>
+          </label>
+        </div>
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={loading}
+          className={`w-full bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 hover:from-slate-800 hover:to-indigo-900 text-white py-3 px-4 rounded-xl font-bold text-sm shadow-md shadow-slate-900/20 hover:shadow-lg active:scale-[0.98] transition-all flex justify-center items-center gap-2 cursor-pointer mt-2 ${
+            loading ? "cursor-not-allowed opacity-70" : ""
+          }`}
+        >
+          {loading ? (
+            <LoaderCircle className="animate-spin h-5 w-5" />
+          ) : (
+            <>
+              <span>Register Employer Account</span>
+              <ArrowRight size={16} />
+            </>
+          )}
+        </button>
+
+        {/* Login Link */}
+        <div className="text-center text-sm text-slate-600 pt-2">
+          Already registered?{" "}
+          <Link
+            to={nextParam ? `/recruiter-login?next=${encodeURIComponent(nextParam)}` : "/recruiter-login"}
+            className="text-indigo-600 hover:text-indigo-800 font-bold hover:underline"
           >
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Company Signup
-              </h1>
-              <p className="text-sm text-gray-500">
-                Join CareerPilot to hire top talent instantly
-              </p>
-            </div>
-
-            <form className="space-y-4" onSubmit={recruiterSignupHandler}>
-              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
-                <Building2 className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="text"
-                  placeholder="Company Name"
-                  className="w-full outline-none text-sm bg-transparent"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
-                <Mail className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="email"
-                  placeholder="Company Email Address"
-                  className="w-full outline-none text-sm bg-transparent"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
-                <Globe className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="url"
-                  placeholder="Website URL (Optional)"
-                  className="w-full outline-none text-sm bg-transparent"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
-              </div>
-
-              <div className="border border-gray-200 rounded-xl flex items-center p-3 bg-gray-50/50 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 focus-within:bg-white transition-all">
-                <Lock className="h-5 w-5 text-gray-400 mr-3" />
-                <input
-                  type="password"
-                  placeholder="Password (min 8 characters)"
-                  className="w-full outline-none text-sm bg-transparent"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  minLength={8}
-                  required
-                />
-              </div>
-
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                    required
-                  />
-                  <span>
-                    I agree to the{" "}
-                    <Link to="/terms" className="text-indigo-600 hover:underline">
-                      Terms and Conditions
-                    </Link>
-                  </span>
-                </label>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full bg-indigo-900 text-white py-3 px-4 mt-2 rounded-xl hover:bg-indigo-950 active:scale-[0.98] transition-all flex justify-center items-center font-medium shadow-sm shadow-indigo-900/20 ${
-                  loading ? "cursor-not-allowed opacity-70" : ""
-                }`}
-              >
-                {loading ? (
-                  <LoaderCircle className="animate-spin h-5 w-5" />
-                ) : (
-                  "Register Company"
-                )}
-              </button>
-
-              <div className="text-center text-sm text-gray-600 pt-4">
-                Already have an account?{" "}
-                <Link
-                  to="/recruiter-login"
-                  className="text-indigo-600 hover:text-indigo-800 font-medium hover:underline"
-                >
-                  Log In
-                </Link>
-              </div>
-            </form>
-          </motion.div>
-        </main>
-        <Footer />
-      </div>
-    </>
+            Sign in
+          </Link>
+        </div>
+      </form>
+    </AuthLayout>
   );
 };
 

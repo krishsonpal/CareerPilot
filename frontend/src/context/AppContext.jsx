@@ -99,7 +99,23 @@ export const AppContextProvider = ({ children }) => {
     setToken(null);
     setUserRole(null);
     setUserData(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     toast.success("Logged out successfully");
+  };
+
+  /**
+   * Helper to determine post-login redirect path
+   */
+  const getRedirectPath = (role, nextParam) => {
+    if (nextParam && nextParam.startsWith("/")) {
+      return nextParam;
+    }
+    if (role === "recruiter") {
+      return "/dashboard/manage-jobs";
+    }
+    // Student candidate destination
+    return "/app";
   };
 
   // ------------------------------------------------------------------------
@@ -128,6 +144,7 @@ export const AppContextProvider = ({ children }) => {
     isAuthLoading,
     fetchUserProfile,
     logout,
+    getRedirectPath,
     
     // Legacy support (to avoid breaking current pages immediately during migration)
     userToken: userRole === "student" ? token : null,
@@ -139,7 +156,7 @@ export const AppContextProvider = ({ children }) => {
     companyData: userRole === "recruiter" ? userData : null,
 
     // Applications
-    userApplication: userApplications, // Keep singular naming for legacy component compatibility
+    userApplication: userApplications,
     applicationsLoading,
     fetchUserApplication: fetchUserApplications
   };
