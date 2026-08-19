@@ -1,12 +1,12 @@
 import React, { useContext, useEffect } from "react";
-import FeaturedJob from "../components/FeaturedJob";
-import Hero from "../components/Hero";
-import JobCategoryt from "../components/JobCategory";
 import Navbar from "../components/Navbar";
+import Hero from "../components/Hero";
+import HowItWorks from "../components/HowItWorks";
+import AIChatTeaser from "../components/AIChatTeaser";
+import JobCategory from "../components/JobCategory";
+import FeaturedJob from "../components/FeaturedJob";
 import Testimonials from "../components/Testimonials";
 import Counter from "../components/Counter";
-import Download from "../components/Download";
-import ChatbotSection from "../components/ChatbotSection";
 import Footer from "../components/Footer";
 import { AppContext } from "../context/AppContext";
 
@@ -18,17 +18,19 @@ const Home = () => {
   }, []);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-white">
       <Navbar />
-      <Hero />
-      <JobCategoryt />
-      <FeaturedJob />
-      <Testimonials />
-      <Counter />
-      <Download />
-      <ChatbotSection />
+      <main className="flex-1">
+        <Hero />
+        <HowItWorks />
+        <AIChatTeaser />
+        <JobCategory />
+        <FeaturedJob />
+        <Testimonials />
+        <Counter />
+      </main>
       <Footer />
-    </>
+    </div>
   );
 };
 

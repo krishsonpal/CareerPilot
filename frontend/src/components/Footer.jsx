@@ -1,73 +1,95 @@
 import React from "react";
-import { assets } from "../assets/assets";
-// import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Sparkles, Github, Twitter, Linkedin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="border-t border-gray-200 mt-20 py-5">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Logo and Copyright */}
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          {/* <Link to="/">
-            <img
-              className="w-[120px] object-contain"
-              src={assets.logo}
-t="Company Logo"
-            />
-          </Link> */}
-          <span className="hidden sm:block text-gray-500 h-6 lg:flex items-center">
-            |
-          </span>
-          <p className="text-gray-600 text-sm sm:text-base text-center sm:text-left">
-            All Copyright rights reserved.
+    <footer className="bg-white border-t border-slate-200/90 pt-14 pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-100">
+          
+          {/* Col 1: Brand */}
+          <div className="md:col-span-2 space-y-4">
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-9 h-9 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-200">
+                <span className="text-white font-black text-base">CP</span>
+              </div>
+              <span className="text-xl font-extrabold text-slate-900 tracking-tight">
+                CareerPilot
+              </span>
+            </Link>
+            <p className="text-sm text-slate-500 max-w-sm leading-relaxed">
+              AI-powered smart recruitment & internship matching platform. Connecting top talent with premier companies through multi-vector semantic intelligence.
+            </p>
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+              <Sparkles size={12} /> Powered by Gemini & FAISS
+            </div>
+          </div>
+
+          {/* Col 2: Navigation */}
+          <div>
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 mb-4">
+              Platform
+            </h4>
+            <ul className="space-y-2.5 text-sm font-medium text-slate-600">
+              <li>
+                <Link to="/all-jobs/all" className="hover:text-indigo-600 transition-colors">
+                  Find Jobs
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="hover:text-indigo-600 transition-colors">
+                  About Architecture
+                </Link>
+              </li>
+              <li>
+                <Link to="/candidate-login" className="hover:text-indigo-600 transition-colors">
+                  AI Career Coach
+                </Link>
+              </li>
+              <li>
+                <Link to="/recruiter-login" className="hover:text-indigo-600 transition-colors">
+                  For Employers
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Col 3: Legal & Info */}
+          <div>
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 mb-4">
+              Legal & Support
+            </h4>
+            <ul className="space-y-2.5 text-sm font-medium text-slate-600">
+              <li>
+                <Link to="/terms" className="hover:text-indigo-600 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-indigo-600 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <a href="mailto:support@careerpilot.ai" className="hover:text-indigo-600 transition-colors">
+                  support@careerpilot.ai
+                </a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© {new Date().getFullYear()} CareerPilot. All rights reserved.</p>
+          <p className="flex items-center gap-1 font-medium">
+            Designed with state-of-the-art AI architecture
           </p>
         </div>
 
-        {/* Social Icons */}
-        <div className="flex items-center gap-6 mt-4 sm:mt-0">
-          <a
-            href="#"
-            className="transition-transform hover:scale-110"
-            aria-label="Facebook"
-          >
-            <img
-              src={assets.facebook_icon}
-              alt="Facebook"
-              className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
-              width={32}
-              height={32}
-              loading="lazy"
-            />
-          </a>
-          <a
-            href="#"
-            className="transition-transform hover:scale-110"
-            aria-label="Twitter"
-          >
-            <img
-              src={assets.twitter_icon}
-              alt="Twitter"
-              className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
-              width={32}
-              height={32}
-              loading="lazy"
-            />
-          </a>
-          <a
-            href="#"
-            className="transition-transform hover:scale-110"
-            aria-label="Instagram"
-          >
-            <img
-              src={assets.instagram_icon}
-              alt="Instagram"
-              className="h-6 w-6 sm:h-8 sm:w-8 object-contain"
-              width={32}
-              height={32}
-              loading="lazy"
-            />
-          </a>
-        </div>
       </div>
     </footer>
   );
