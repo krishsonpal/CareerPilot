@@ -30,11 +30,7 @@ engine: AsyncEngine = create_async_engine(
     pool_size=5,
     max_overflow=10,
     echo=not settings.is_production,  # SQL logging in development only
-    connect_args={
-        "ssl": "require" if settings.is_production else None,
-    }
-    if "asyncpg" in settings.database_url
-    else {},
+    connect_args={"ssl": "require"},  # Neon DB requires SSL; must be in connect_args not URL
 )
 
 

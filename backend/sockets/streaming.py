@@ -154,7 +154,16 @@ async def stream_chat_response(
     full_response = ""
     try:
         async for chunk in llm.astream(lc_messages):
-            token = chunk.content or ""
+            # chunk.content can be a str or a list of content parts (Gemini structured output)
+            raw = chunk.content
+            if isinstance(raw, list):
+                # Each item may be a dict like {"type": "text", "text": "..."} or a plain str
+                token = "".join(
+                    part.get("text", "") if isinstance(part, dict) else str(part)
+                    for part in raw
+                )
+            else:
+                token = raw or ""
             if token:
                 full_response += token
                 yield token

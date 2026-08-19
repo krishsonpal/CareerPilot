@@ -177,6 +177,9 @@ class ResumeProfile(Base):
     # Used for: semantic job matching, intent-aware recommendations
     embedding = Column(Vector(768), nullable=True)
 
+    processing_status = Column(String(20), nullable=False, default="processing")
+    # processing_status values: processing | completed | failed
+
     resume_url = Column(Text, nullable=True)  # Optional: URL to stored file (S3/cloud)
     last_updated = Column(TIMESTAMP(timezone=True), nullable=False, default=_now_tz, server_default=func.now(), onupdate=_now_tz)
 

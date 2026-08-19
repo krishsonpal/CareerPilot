@@ -25,9 +25,11 @@ import logging
 from typing import Optional
 
 import socketio
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.database import get_db
+# Use AsyncSessionLocal directly — NOT get_db() which is a FastAPI generator
+# that expects to be driven by Starlette's dependency injection lifecycle.
+# Calling it from Socket.IO event handlers causes double-close errors.
+from db.database import AsyncSessionLocal
 from utils.auth import decode_token
 from services.gemini_service import detect_intent
 from sockets.streaming import stream_chat_response
@@ -59,12 +61,6 @@ def _extract_jwt(auth: Optional[dict]) -> Optional[str]:
     if token.startswith("Bearer "):
         token = token[7:]
     return token or None
-
-
-async def _get_db_session() -> AsyncSession:
-    """Get a fresh DB session for a Socket.IO event handler."""
-    async for db in get_db():
-        return db
 
 
 # ---------------------------------------------------------------------------
@@ -125,8 +121,11 @@ async def chat_message(sid: str, data: dict):
     Client emits:  { message: "What Python jobs are available?" }
     Server emits:  chat_token events (one per token) then chat_done
 
-    The DB session is created fresh per message to avoid connection reuse issues
-    with the async event loop in long-lived Socket.IO connections.
+    We create the DB session directly via AsyncSessionLocal (not via get_db())
+    because get_db() is a FastAPI dependency generator designed to be driven by
+    Starlette's request lifecycle. Using it in a Socket.IO handler causes an
+    IllegalStateChangeError when the generator's finally-block tries to close
+    a session that is still mid-transaction.
     """
     session = await sio.get_session(sid)
     if not session:
@@ -151,29 +150,29 @@ async def chat_message(sid: str, data: dict):
     # Detect intent upfront (fast — keyword matching first, then Gemini)
     intent = detect_intent(message)
 
-    db: Optional[AsyncSession] = None
-    try:
-        db = await _get_db_session()
+    # Create a dedicated DB session for this Socket.IO event.
+    # Using async context manager ensures proper cleanup even on exceptions.
+    async with AsyncSessionLocal() as db:
+        try:
+            # Stream tokens from the LangChain generator
+            async for token in stream_chat_response(db=db, user_id=user_id, message=message):
+                await sio.emit("chat_token", {"token": token}, to=sid)
 
-        # Stream tokens from the LangChain generator
-        async for token in stream_chat_response(db=db, user_id=user_id, message=message):
-            await sio.emit("chat_token", {"token": token}, to=sid)
+            await db.commit()
 
-        # Signal end of stream to client
-        await sio.emit("chat_done", {"intent": intent}, to=sid)
-        logger.info(
-            "[Socket.IO] Stream complete: user=%s intent=%s", user_id, intent
-        )
+            # Signal end of stream to client
+            await sio.emit("chat_done", {"intent": intent}, to=sid)
+            logger.info(
+                "[Socket.IO] Stream complete: user=%s intent=%s", user_id, intent
+            )
 
-    except Exception as exc:
-        logger.error(
-            "[Socket.IO] Stream error for user=%s: %s", user_id, exc, exc_info=True
-        )
-        await sio.emit(
-            "chat_error",
-            {"message": "An error occurred while generating the response. Please try again."},
-            to=sid,
-        )
-    finally:
-        if db:
-            await db.close()
+        except Exception as exc:
+            await db.rollback()
+            logger.error(
+                "[Socket.IO] Stream error for user=%s: %s", user_id, exc, exc_info=True
+            )
+            await sio.emit(
+                "chat_error",
+                {"message": "An error occurred while generating the response. Please try again."},
+                to=sid,
+            )

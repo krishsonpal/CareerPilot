@@ -89,11 +89,17 @@ class Settings(BaseSettings):
         Return a synchronous psycopg2 URL for Alembic migrations.
         Replaces asyncpg driver with psycopg2 in the connection string.
         """
-        return self.database_url.replace(
+        url = self.database_url.replace(
             "postgresql+asyncpg://", "postgresql+psycopg2://"
         ).replace(
             "postgres+asyncpg://", "postgresql+psycopg2://"
+        ).replace(
+            "?ssl=require", ""  # Remove if present (handled separately)
         )
+        # Always append sslmode=require for psycopg2 (Neon DB requires SSL)
+        if "?" not in url:
+            return url + "?sslmode=require"
+        return url + "&sslmode=require"
 
     model_config = {
         "env_file": ".env",
