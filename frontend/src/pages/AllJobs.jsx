@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Filter, Star, Sparkles, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Filter, Sparkles, Search } from "lucide-react";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -23,7 +23,7 @@ function AllJobs() {
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
   const {
-    jobs, // from context (all public jobs)
+    jobs,
     fetchJobsData,
     token,
     userRole,
@@ -48,7 +48,6 @@ function AllJobs() {
 
   const [semanticLoading, setSemanticLoading] = useState(false);
 
-  // Fetch AI Recommended Jobs (if student is logged in)
   const fetchRecommendedJobs = async () => {
     if (!isStudent) return;
     setRecommendationsLoading(true);
@@ -56,7 +55,6 @@ function AllJobs() {
       const { data } = await api.get(`/jobs/recommended`);
       setRecommendedJobs(data || []);
     } catch (error) {
-      // 400 likely means no resume uploaded yet
       console.log("No recommendations available:", error?.response?.data?.detail);
       setRecommendedJobs([]);
     } finally {
@@ -64,7 +62,6 @@ function AllJobs() {
     }
   };
 
-  // Perform Semantic Search via AI if search is triggered
   const performSemanticSearch = async (query) => {
     if (!query) return;
     setSemanticLoading(true);
@@ -81,24 +78,19 @@ function AllJobs() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      
-      // If the user came from the home page search bar
       if (isSearched && searchFilter.title) {
         await performSemanticSearch(searchFilter.title);
       } else {
         await fetchJobsData();
       }
-      
       await fetchRecommendedJobs();
       setLoading(false);
     };
     fetchData();
   }, [token, userRole, isSearched]);
 
-  // If we aren't doing a semantic search, just use the global jobs array
   useEffect(() => {
-    if (isSearched && searchFilter.title) return; // Handled by semantic search
-
+    if (isSearched && searchFilter.title) return;
     let filtered = [...jobs];
     if (category && category !== "all") {
       filtered = filtered.filter(
@@ -110,10 +102,8 @@ function AllJobs() {
     setCurrentPage(1);
   }, [category, jobs, isSearched]);
 
-  // Local filtering for sidebar checkboxes
   useEffect(() => {
     let results = [...jobData];
-
     if (searchInput.title.trim()) {
       results = results.filter((job) =>
         job.title.toLowerCase().includes(searchInput.title.trim().toLowerCase())
@@ -124,7 +114,6 @@ function AllJobs() {
         (job.location || "Remote").toLowerCase().includes(searchInput.location.trim().toLowerCase())
       );
     }
-    // Simple category mapping (frontend uses categories, backend uses job_type)
     if (searchInput.selectedCategories.length > 0) {
       results = results.filter((job) =>
         searchInput.selectedCategories.some(cat => 
@@ -138,7 +127,6 @@ function AllJobs() {
         searchInput.selectedLocations.includes(job.location || "Remote")
       );
     }
-
     setFilteredJobs(results);
     setCurrentPage(1);
   }, [jobData, searchInput]);
@@ -165,10 +153,10 @@ function AllJobs() {
 
   if (loading || semanticLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-        <div className="flex flex-col items-center">
-          <LoaderCircle className="h-10 w-10 text-indigo-600 animate-spin mb-4" />
-          <p className="text-gray-500">{semanticLoading ? "AI is analyzing jobs..." : "Loading jobs..."}</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader />
+          <p className="text-muted-foreground text-sm">{semanticLoading ? "AI is analyzing jobs..." : "Loading jobs..."}</p>
         </div>
       </div>
     );
@@ -177,13 +165,13 @@ function AllJobs() {
   return (
     <>
       <Navbar />
-      <div className="bg-gray-50/50 min-h-screen pt-6 pb-20">
+      <div className="bg-background min-h-screen pt-6 pb-20">
         <div className="container mx-auto px-4 md:px-8">
           
           <div className="md:hidden flex justify-end mb-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl hover:bg-gray-50 transition shadow-sm"
+              className="flex items-center gap-2 bg-card border border-border text-foreground px-4 py-2 rounded-xl hover:bg-muted transition shadow-sm"
             >
               <Filter size={18} />
               {showFilters ? "Hide Filters" : "Show Filters"}
@@ -198,40 +186,40 @@ function AllJobs() {
           >
             {/* Sidebar Filters */}
             <div className={`w-full md:w-64 flex-shrink-0 ${showFilters ? "block" : "hidden md:block"}`}>
-              <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm sticky top-24">
+              <div className="bg-card p-5 rounded-2xl border border-border shadow-sm sticky top-24">
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Search Role</h2>
+                    <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Search Role</h2>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <input
                         type="text"
                         name="title"
                         value={searchInput.title}
                         onChange={handleSearchChange}
                         placeholder="e.g. Developer"
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                        className="w-full bg-muted/40 border border-border rounded-xl pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Location</h2>
+                    <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Location</h2>
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <input
                         type="text"
                         name="location"
                         value={searchInput.location}
                         onChange={handleSearchChange}
                         placeholder="e.g. Remote"
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                        className="w-full bg-muted/40 border border-border rounded-xl pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <h2 className="text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wider">Categories</h2>
+                    <h2 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Categories</h2>
                     <ul className="space-y-2.5">
                       {JobCategories.slice(0, 6).map((cat, i) => (
                         <li key={i} className="flex items-center">
@@ -239,9 +227,9 @@ function AllJobs() {
                             type="checkbox"
                             checked={searchInput.selectedCategories.includes(cat)}
                             onChange={() => setSearchInput(p => ({ ...p, selectedCategories: toggleArrayItem(p.selectedCategories, cat) }))}
-                            className="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                            className="h-4 w-4 accent-primary border-border rounded"
                           />
-                          <span className="ml-2.5 text-sm text-gray-600">{cat}</span>
+                          <span className="ml-2.5 text-sm text-muted-foreground">{cat}</span>
                         </li>
                       ))}
                     </ul>
@@ -250,7 +238,7 @@ function AllJobs() {
                   {searchInput.title || searchInput.selectedCategories.length > 0 || isSearched ? (
                     <button
                       onClick={clearAllFilters}
-                      className="w-full py-2 text-sm text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl font-medium transition-colors"
+                      className="w-full py-2 text-sm text-primary bg-primary/10 hover:bg-primary/20 rounded-xl font-medium transition-colors border border-primary/20"
                     >
                       Clear All Filters
                     </button>
@@ -266,12 +254,12 @@ function AllJobs() {
               {isStudent && recommendedJobs.length > 0 && (
                 <div className="mb-10">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="bg-indigo-100 p-1.5 rounded-lg">
-                      <Sparkles className="text-indigo-600 h-5 w-5" />
+                    <div className="bg-primary/10 p-1.5 rounded-lg">
+                      <Sparkles className="text-primary h-5 w-5" />
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-900">For You</h2>
+                    <h2 className="text-2xl font-bold text-foreground">For You</h2>
                   </div>
-                  <p className="text-gray-500 mb-6">AI matched based on your resume profile</p>
+                  <p className="text-muted-foreground mb-6">AI matched based on your resume profile</p>
                   
                   <motion.div
                     variants={SlideUp(0.3)}
@@ -280,20 +268,20 @@ function AllJobs() {
                     className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
                   >
                     {recommendedJobs.slice(0, 3).map((job) => (
-                      <div key={job.id} onClick={() => navigate(`/apply-job/${job.id}`)} className="bg-white border border-indigo-100 hover:border-indigo-300 rounded-2xl p-5 relative cursor-pointer shadow-sm hover:shadow-md transition-all group overflow-hidden">
-                        <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs px-3 py-1 rounded-bl-xl font-medium shadow-sm z-10">
+                      <div key={job.id} onClick={() => navigate(`/apply-job/${job.id}`)} className="bg-card border border-primary/20 hover:border-primary/40 rounded-2xl p-5 relative cursor-pointer shadow-sm hover:shadow-md transition-all group overflow-hidden">
+                        <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-bl-xl font-medium shadow-sm z-10">
                           {job.similarity_score ? `${(job.similarity_score * 100).toFixed(0)}% Match` : 'Top Match'}
                         </div>
                         <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-150 transition-transform duration-500">
-                          <Sparkles className="w-32 h-32 text-indigo-600" />
+                          <Sparkles className="w-32 h-32 text-primary" />
                         </div>
                         
-                        <h3 className="font-bold text-gray-900 text-lg mb-1 pr-16 line-clamp-1 group-hover:text-indigo-600 transition-colors">{job.title}</h3>
-                        <p className="text-sm text-gray-500 mb-4 capitalize">{job.job_type} • {job.is_remote ? "Remote" : (job.location || "On-site")}</p>
+                        <h3 className="font-bold text-foreground text-lg mb-1 pr-16 line-clamp-1 group-hover:text-primary transition-colors">{job.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-4 capitalize">{job.job_type} • {job.is_remote ? "Remote" : (job.location || "On-site")}</p>
                         
                         <div className="flex flex-wrap gap-1.5 mt-auto">
                           {(job.skills_required || []).slice(0, 3).map(s => (
-                            <span key={s} className="px-2 py-1 bg-indigo-50/80 text-indigo-700 text-xs rounded-md font-medium">{s}</span>
+                            <span key={s} className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-md font-medium">{s}</span>
                           ))}
                         </div>
                       </div>
@@ -305,10 +293,10 @@ function AllJobs() {
               {/* All Jobs */}
               <div className="mb-6 flex items-end justify-between">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 capitalize">
+                  <h1 className="text-2xl font-bold text-foreground capitalize">
                     {isSearched ? "Search Results" : category === "all" ? "All Openings" : `${category.replace("-", " ")}`}
                   </h1>
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-muted-foreground mt-1">
                     {filteredJobs.length} {filteredJobs.length === 1 ? "job" : "jobs"} available
                   </p>
                 </div>
@@ -322,19 +310,18 @@ function AllJobs() {
               >
                 {paginatedJobs.length > 0 ? (
                   paginatedJobs.map((job) => (
-                    // We modify JobCard to handle the new job schema inside it, but pass the job object
                     <JobCard key={job.id} job={job} />
                   ))
                 ) : (
-                  <div className="col-span-full text-center bg-white p-12 border border-dashed border-gray-300 rounded-2xl">
-                    <div className="bg-gray-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Search className="h-8 w-8 text-gray-400" />
+                  <div className="col-span-full text-center bg-card p-12 border border-dashed border-border rounded-2xl">
+                    <div className="bg-muted/40 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search className="h-8 w-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-1">No matches found</h3>
-                    <p className="text-gray-500 mb-6">Try adjusting your filters or search query.</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">No matches found</h3>
+                    <p className="text-muted-foreground mb-6">Try adjusting your filters or search query.</p>
                     <button
                       onClick={clearAllFilters}
-                      className="px-5 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 font-medium transition-colors"
+                      className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 font-medium transition-colors"
                     >
                       Clear Filters
                     </button>
@@ -348,7 +335,7 @@ function AllJobs() {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="p-2 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 text-gray-700 bg-white shadow-sm"
+                    className="p-2 border border-border rounded-xl hover:bg-muted disabled:opacity-30 text-foreground bg-card shadow-sm"
                   >
                     <ChevronLeft size={20} />
                   </button>
@@ -360,8 +347,8 @@ function AllJobs() {
                         onClick={() => setCurrentPage(i + 1)}
                         className={`w-10 h-10 rounded-xl text-sm font-medium transition-all ${
                           currentPage === i + 1
-                            ? "bg-indigo-600 text-white shadow-sm shadow-indigo-200"
-                            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-card border border-border text-foreground hover:bg-muted"
                         }`}
                       >
                         {i + 1}
@@ -372,7 +359,7 @@ function AllJobs() {
                   <button
                     onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="p-2 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-30 text-gray-700 bg-white shadow-sm"
+                    className="p-2 border border-border rounded-xl hover:bg-muted disabled:opacity-30 text-foreground bg-card shadow-sm"
                   >
                     <ChevronRight size={20} />
                   </button>

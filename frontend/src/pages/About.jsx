@@ -11,15 +11,15 @@ const About = () => {
   return (
     <>
       <Navbar />
-      <section>
+      <section className="bg-background min-h-screen">
         <Counter />
 
         {/* About Section */}
-        <div className="mt-16">
-          <h1 className="text-3xl md:text-4xl font-semibold mb-8 text-center text-gray-700">
-            About 
+        <div className="mt-16 px-4 sm:px-8">
+          <h1 className="text-3xl md:text-4xl font-semibold mb-8 text-center text-foreground">
+            About
           </h1>
-          <div className="max-w-4xl text-center mx-auto space-y-6 text-gray-600">
+          <div className="max-w-4xl text-center mx-auto space-y-6 text-muted-foreground">
             <motion.p
               variants={SlideUp(0.3)}
               initial="hidden"
@@ -50,21 +50,21 @@ const About = () => {
         <Testimonials />
 
         {/* How It Works Section */}
-        <div className="mt-24">
+        <div className="mt-24 px-4 sm:px-8">
           <div className="text-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-semibold text-gray-800 mb-3">
+            <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-3">
               How It Works?
             </h1>
-            <p className="text-lg text-gray-500">Job for anyone, anywhere</p>
+            <p className="text-lg text-muted-foreground">Job for anyone, anywhere</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {/* Work Step 1 */}
             <motion.div
               variants={SlideLeft(0.2)}
               initial="hidden"
               whileInView="visible"
-              className="bg-white p-8 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
+              className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-300 text-center"
             >
               <div className="flex justify-center mb-6">
                 <img
@@ -73,10 +73,10 @@ const About = () => {
                   className="h-16 w-16 object-contain"
                 />
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              <h3 className="text-xl font-semibold mb-4 text-foreground">
                 Free Resume Assessments
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Employers on average spend 31 seconds scanning resumes to
                 identify potential matches.
               </p>
@@ -87,7 +87,7 @@ const About = () => {
               variants={SlideLeft(0.4)}
               initial="hidden"
               whileInView="visible"
-              className="bg-white p-8 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
+              className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-300 text-center"
             >
               <div className="flex justify-center mb-6">
                 <img
@@ -96,10 +96,10 @@ const About = () => {
                   className="h-16 w-16 object-contain"
                 />
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              <h3 className="text-xl font-semibold mb-4 text-foreground">
                 Job Fit Scoring
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Our advanced algorithm scores your resume against job criteria.
               </p>
             </motion.div>
@@ -109,7 +109,7 @@ const About = () => {
               variants={SlideLeft(0.6)}
               initial="hidden"
               whileInView="visible"
-              className="bg-white p-8 rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-shadow duration-300 text-center"
+              className="bg-card p-8 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow duration-300 text-center"
             >
               <div className="flex justify-center mb-6">
                 <img
@@ -118,10 +118,10 @@ const About = () => {
                   className="h-16 w-16 object-contain"
                 />
               </div>
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
+              <h3 className="text-xl font-semibold mb-4 text-foreground">
                 Help Every Step of the Way
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Receive expert guidance throughout your job search journey.
               </p>
             </motion.div>
