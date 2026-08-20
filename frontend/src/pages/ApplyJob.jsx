@@ -28,7 +28,6 @@ const ApplyJob = () => {
     jobLoading,
     token,
     userRole,
-    userData,
     userApplication = [],
     fetchUserApplication
   } = useContext(AppContext);
@@ -39,11 +38,6 @@ const ApplyJob = () => {
     if (!isStudent) {
       toast.error("Please login as a candidate to apply");
       navigate("/candidate-login");
-      return;
-    }
-    if (userData && !userData.has_resume_summary) {
-      toast.error("Please upload your resume in your Profile first");
-      navigate("/applications");
       return;
     }
 
