@@ -75,7 +75,6 @@ const Profile = () => {
           toast.error("Resume processing failed in worker queue.");
         }
       } catch (err) {
-        // If status polling fails, try direct fetch after a few attempts
         if (attempts >= 10) {
           clearInterval(pollIntervalRef.current);
           setIsProcessing(false);
@@ -110,7 +109,6 @@ const Profile = () => {
         toast.success("Resume uploaded! Starting async BullMQ analysis...");
         startPollingTask(data.task_id);
       } else {
-        // Direct response fallback
         fetchProfile();
       }
     } catch (err) {
@@ -126,11 +124,11 @@ const Profile = () => {
       
       {/* 1. Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-          <UserCheck className="text-indigo-600" size={26} />
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2.5">
+          <UserCheck className="text-primary" size={26} />
           <span>AI Resume Profile & Pipeline</span>
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Upload your PDF resume. Our async BullMQ queue parses your skills and computes FAISS multi-vector embeddings.
         </p>
       </div>

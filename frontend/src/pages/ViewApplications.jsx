@@ -10,7 +10,7 @@ import {
   CheckCircle2,
   FileText,
   Mail,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import MatchGauge from "../components/MatchGauge";
@@ -103,16 +103,16 @@ const ViewApplications = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/dashboard/manage-jobs")}
-            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-card border border-border text-foreground hover:bg-muted transition-colors cursor-pointer"
           >
             <ChevronLeft size={18} />
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-              <Users className="text-indigo-600" size={24} />
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2">
+              <Users className="text-primary" size={24} />
               <span>ATS Candidate Pipeline</span>
             </h1>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Review AI-ranked candidates with semantic match scores and resume profiles.
             </p>
           </div>
@@ -121,14 +121,14 @@ const ViewApplications = () => {
         {/* Job Selector Dropdown */}
         {recruiterJobs.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Job:</span>
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Job:</span>
             <select
               value={selectedJobId}
               onChange={(e) => {
                 setSelectedJobId(e.target.value);
                 navigate(`/dashboard/view-applications?job_id=${e.target.value}`);
               }}
-              className="bg-white border border-slate-200/80 rounded-xl px-4 py-2 text-xs font-bold text-slate-800 outline-none shadow-xs cursor-pointer max-w-xs"
+              className="bg-card border border-border rounded-xl px-4 py-2 text-xs font-bold text-foreground outline-none shadow-xs cursor-pointer max-w-xs"
             >
               {recruiterJobs.map((j) => (
                 <option key={j.id} value={j.id}>
@@ -141,12 +141,12 @@ const ViewApplications = () => {
       </div>
 
       {/* 2. Candidate Evaluation Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">
+      <div className="bg-card rounded-2xl border border-border shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <h3 className="text-sm font-bold text-foreground">
             Candidates Evaluated ({applications.length})
           </h3>
-          <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 flex items-center gap-1.5">
+          <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20 flex items-center gap-1.5">
             <Sparkles size={12} /> Ranked by FAISS Semantic Vector Score
           </span>
         </div>
@@ -157,11 +157,11 @@ const ViewApplications = () => {
           </div>
         ) : applications.length === 0 ? (
           <div className="text-center py-16 px-4 space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
               <Users size={24} />
             </div>
-            <h4 className="text-base font-bold text-slate-900">No applicants for this role yet</h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <h4 className="text-base font-bold text-foreground">No applicants for this role yet</h4>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Candidates who apply will automatically have their resume analyzed and ranked here.
             </p>
           </div>
@@ -169,7 +169,7 @@ const ViewApplications = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200/80 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                <tr className="bg-muted/40 border-b border-border text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground">
                   <th className="py-4 px-6">Candidate</th>
                   <th className="py-4 px-6">Applied Date</th>
                   <th className="py-4 px-6 text-center">AI Match Fit</th>
@@ -177,14 +177,14 @@ const ViewApplications = () => {
                   <th className="py-4 px-6 text-right">Stage / Decision</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-sm font-medium">
+              <tbody className="divide-y divide-border text-sm font-medium">
                 {applications.map((app) => {
                   const student = app.student || {};
                   const isUpdating = updatingStatusId === app.id;
                   const matchScore = app.match_score || 85;
 
                   return (
-                    <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={app.id} className="hover:bg-muted/30 transition-colors">
                       
                       {/* Candidate Avatar & Details */}
                       <td className="py-4 px-6">
@@ -194,17 +194,17 @@ const ViewApplications = () => {
                               student.avatar_url ||
                               `https://ui-avatars.com/api/?name=${encodeURIComponent(
                                 student.full_name || "Applicant"
-                              )}&background=6366f1&color=fff&bold=true`
+                              )}&background=10b981&color=fff&bold=true`
                             }
                             alt="Candidate"
-                            className="w-10 h-10 rounded-xl object-cover ring-2 ring-indigo-500/20 shrink-0"
+                            className="w-10 h-10 rounded-xl object-cover ring-2 ring-primary/20 shrink-0"
                           />
                           <div>
-                            <p className="font-bold text-slate-900 line-clamp-1">
+                            <p className="font-bold text-foreground line-clamp-1">
                               {student.full_name || "Candidate"}
                             </p>
-                            <p className="text-xs text-slate-500 flex items-center gap-1">
-                              <Mail size={11} className="text-slate-400" />
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              <Mail size={11} className="text-muted-foreground" />
                               <span>{student.email || "Confidential"}</span>
                             </p>
                           </div>
@@ -212,7 +212,7 @@ const ViewApplications = () => {
                       </td>
 
                       {/* Applied Date */}
-                      <td className="py-4 px-6 text-xs text-slate-500">
+                      <td className="py-4 px-6 text-xs text-muted-foreground">
                         {moment(app.applied_at || app.created_at).format("MMM D, YYYY")}
                       </td>
 
@@ -230,35 +230,35 @@ const ViewApplications = () => {
                             href={getPdfUrl(app.resume_url || student.resume_url)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-bold rounded-xl border border-slate-200 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-primary/10 text-foreground hover:text-primary text-xs font-bold rounded-xl border border-border transition-colors"
                           >
                             <FileText size={13} />
                             <span>View Resume PDF</span>
                             <ExternalLink size={11} />
                           </a>
                         ) : (
-                          <span className="text-xs text-slate-400 italic">No PDF attached</span>
+                          <span className="text-xs text-muted-foreground italic">No PDF attached</span>
                         )}
                       </td>
 
                       {/* Status Selector Dropdown */}
                       <td className="py-4 px-6 text-right">
                         <div className="inline-flex items-center gap-2">
-                          {isUpdating && <Loader2 size={14} className="animate-spin text-indigo-600" />}
+                          {isUpdating && <Loader2 size={14} className="animate-spin text-primary" />}
                           <select
                             value={app.status || "applied"}
                             onChange={(e) => handleStatusUpdate(app.id, e.target.value)}
                             disabled={isUpdating}
                             className={`text-xs font-bold rounded-xl px-3 py-1.5 outline-none border cursor-pointer transition-all ${
                               app.status === "shortlisted"
-                                ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                                ? "bg-primary/10 text-primary border-primary/20"
                                 : app.status === "interviewing"
-                                ? "bg-amber-50 text-amber-800 border-amber-200"
+                                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
                                 : app.status === "selected"
-                                ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                                 : app.status === "rejected"
-                                ? "bg-rose-50 text-rose-800 border-rose-200"
-                                : "bg-slate-100 text-slate-700 border-slate-200"
+                                ? "bg-destructive/10 text-destructive border-destructive/20"
+                                : "bg-muted text-foreground border-border"
                             }`}
                           >
                             <option value="applied">Applied</option>

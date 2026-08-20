@@ -76,14 +76,14 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-4">
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-          <FileText size={16} className="text-indigo-600" />
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-4">
+      <div className="flex items-center justify-between pb-2 border-b border-border">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+          <FileText size={16} className="text-primary" />
           <span>Resume Document</span>
         </h3>
         {resumeProfile && !isReplaceMode && (
-          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+          <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20 flex items-center gap-1">
             <CheckCircle2 size={11} /> Verified Active
           </span>
         )}
@@ -92,16 +92,16 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
       {/* State 1: Resume already exists and user is NOT in replace mode */}
       {resumeProfile && !isReplaceMode && (
         <div className="space-y-4">
-          <div className="p-4 bg-slate-50/80 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3">
+          <div className="p-4 bg-muted/40 rounded-2xl border border-border flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold text-xs shrink-0 border border-rose-100">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/20">
                 PDF
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
+                <p className="text-xs font-bold text-foreground truncate">
                   {resumeProfile.resume_url?.split("/").pop() || "Uploaded_Resume.pdf"}
                 </p>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-muted-foreground">
                   Parsed by Gemini 3.1 • FAISS Indexed
                 </p>
               </div>
@@ -112,7 +112,7 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
                 href={getPdfUrl(resumeProfile.resume_url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 shadow-xs transition-all shrink-0"
+                className="p-2 rounded-xl bg-card border border-border text-foreground hover:text-primary hover:border-primary/40 shadow-2xs transition-all shrink-0"
                 title="View PDF"
               >
                 <ExternalLink size={15} />
@@ -123,7 +123,7 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
           <button
             type="button"
             onClick={() => setIsReplaceMode(true)}
-            className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-2.5 px-4 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <RefreshCw size={13} />
             <span>Upload New Version / Replace Resume</span>
@@ -142,8 +142,8 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
               isDragOver
-                ? "border-indigo-500 bg-indigo-50/50 scale-[1.01]"
-                : "border-slate-200 hover:border-indigo-300 hover:bg-slate-50/50"
+                ? "border-primary bg-primary/10 scale-[1.01]"
+                : "border-border hover:border-primary/40 hover:bg-muted/30"
             }`}
           >
             <input
@@ -154,28 +154,28 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
               className="hidden"
             />
 
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 shadow-xs">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-3 shadow-2xs">
               <UploadCloud size={24} />
             </div>
 
-            <p className="text-xs font-bold text-slate-800 mb-1">
-              Drag & drop your resume PDF here or <span className="text-indigo-600 underline">Browse Files</span>
+            <p className="text-xs font-bold text-foreground mb-1">
+              Drag & drop your resume PDF here or <span className="text-primary underline">Browse Files</span>
             </p>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-muted-foreground">
               Supports PDF or TXT up to 10MB
             </p>
           </div>
 
           {/* Selected File Preview */}
           {selectedFile && (
-            <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-200/80 flex items-center justify-between gap-3">
+            <div className="p-3 bg-primary/5 rounded-xl border border-primary/20 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
-                <FileText size={16} className="text-indigo-600 shrink-0" />
+                <FileText size={16} className="text-primary shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-indigo-950 truncate">
+                  <p className="text-xs font-bold text-foreground truncate">
                     {selectedFile.name}
                   </p>
-                  <p className="text-[10px] text-indigo-700">
+                  <p className="text-[10px] text-primary">
                     {formatFileSize(selectedFile.size)}
                   </p>
                 </div>
@@ -187,7 +187,7 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
                   e.stopPropagation();
                   setSelectedFile(null);
                 }}
-                className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                className="text-muted-foreground hover:text-destructive p-1 cursor-pointer"
               >
                 <Trash2 size={14} />
               </button>
@@ -203,7 +203,7 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
                   setIsReplaceMode(false);
                   setSelectedFile(null);
                 }}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="py-2.5 px-4 bg-muted hover:bg-muted/80 text-muted-foreground text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
                 Cancel
               </button>
@@ -213,7 +213,7 @@ const ResumeDropzone = ({ resumeProfile, onUpload, isUploading }) => {
               type="button"
               disabled={!selectedFile || isUploading}
               onClick={handleUploadSubmit}
-              className={`flex-1 py-2.5 px-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              className={`flex-1 py-2.5 px-4 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 !selectedFile || isUploading ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"
               }`}
             >

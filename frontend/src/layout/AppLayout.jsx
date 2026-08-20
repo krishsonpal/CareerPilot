@@ -2,7 +2,7 @@ import React from "react";
 
 const AppLayout = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50/50 text-slate-900">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {children}
     </div>
   );

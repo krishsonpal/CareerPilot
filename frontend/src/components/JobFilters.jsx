@@ -1,234 +1,146 @@
 import React from "react";
 import { Filter, RotateCcw, Check } from "lucide-react";
+import { JobCategories, JobLocations } from "../assets/assets";
 
-const CATEGORIES = [
-  "Backend",
-  "AI/ML",
-  "Data Science",
-  "DevOps",
-  "Frontend",
-  "Full Stack",
-  "Mobile",
-];
-
-const EXPERIENCE_LEVELS = [
-  { label: "Entry Level", value: "entry-level" },
-  { label: "Mid Level", value: "mid-level" },
-  { label: "Senior Level", value: "senior-level" },
-  { label: "Lead / Principal", value: "lead" },
-];
-
-const SALARY_RANGES = [
-  { label: "$60k - $100k", min: 60000, max: 100000 },
-  { label: "$100k - $130k", min: 100000, max: 130000 },
-  { label: "$130k - $160k", min: 130000, max: 160000 },
-  { label: "$160k+", min: 160000, max: 999999 },
-];
-
-const JOB_TYPES = [
-  { label: "Full-time", value: "full-time" },
-  { label: "Internship", value: "internship" },
-  { label: "Contract", value: "contract" },
-];
-
-const JobFilters = ({ filters, setFilters, onReset }) => {
+const JobFilters = ({
+  selectedCategories = [],
+  setSelectedCategories,
+  selectedLocations = [],
+  setSelectedLocations,
+  selectedRoleType = "all",
+  setSelectedRoleType,
+  isRemoteOnly = false,
+  setIsRemoteOnly,
+  onResetFilters,
+}) => {
   const toggleCategory = (cat) => {
-    setFilters((prev) => {
-      const exists = prev.categories.includes(cat);
-      return {
-        ...prev,
-        categories: exists
-          ? prev.categories.filter((c) => c !== cat)
-          : [...prev.categories, cat],
-      };
-    });
+    if (selectedCategories.includes(cat)) {
+      setSelectedCategories(selectedCategories.filter((c) => c !== cat));
+    } else {
+      setSelectedCategories([...selectedCategories, cat]);
+    }
   };
 
-  const toggleExperience = (exp) => {
-    setFilters((prev) => {
-      const exists = prev.experienceLevels.includes(exp);
-      return {
-        ...prev,
-        experienceLevels: exists
-          ? prev.experienceLevels.filter((e) => e !== exp)
-          : [...prev.experienceLevels, exp],
-      };
-    });
+  const toggleLocation = (loc) => {
+    if (selectedLocations.includes(loc)) {
+      setSelectedLocations(selectedLocations.filter((l) => l !== loc));
+    } else {
+      setSelectedLocations([...selectedLocations, loc]);
+    }
   };
-
-  const toggleSalary = (idx) => {
-    setFilters((prev) => ({
-      ...prev,
-      selectedSalaryIdx: prev.selectedSalaryIdx === idx ? null : idx,
-    }));
-  };
-
-  const toggleJobType = (type) => {
-    setFilters((prev) => {
-      const exists = prev.jobTypes.includes(type);
-      return {
-        ...prev,
-        jobTypes: exists
-          ? prev.jobTypes.filter((t) => t !== type)
-          : [...prev.jobTypes, type],
-      };
-    });
-  };
-
-  const toggleRemote = () => {
-    setFilters((prev) => ({
-      ...prev,
-      remoteOnly: !prev.remoteOnly,
-    }));
-  };
-
-  const hasActiveFilters =
-    filters.categories.length > 0 ||
-    filters.experienceLevels.length > 0 ||
-    filters.selectedSalaryIdx !== null ||
-    filters.jobTypes.length > 0 ||
-    filters.remoteOnly;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-6">
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-6">
       
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      {/* Top Filter Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Filter size={16} className="text-indigo-600" />
-          <h3 className="text-sm font-bold text-slate-900">Filters</h3>
+          <Filter size={16} className="text-primary" />
+          <h3 className="text-sm font-bold text-foreground">Filters</h3>
         </div>
 
-        {hasActiveFilters && (
-          <button
-            onClick={onReset}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 hover:underline cursor-pointer"
-          >
-            <RotateCcw size={12} /> Reset
-          </button>
-        )}
-      </div>
-
-      {/* 1. Remote Only Toggle */}
-      <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/70">
-        <div>
-          <span className="text-xs font-bold text-slate-900 block">Remote Only</span>
-          <span className="text-[11px] text-slate-400">Work from anywhere</span>
-        </div>
         <button
-          type="button"
-          onClick={toggleRemote}
-          className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-            filters.remoteOnly ? "bg-indigo-600" : "bg-slate-300"
-          }`}
+          onClick={onResetFilters}
+          className="text-xs font-semibold text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 cursor-pointer"
         >
-          <div
-            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-              filters.remoteOnly ? "translate-x-5" : "translate-x-0"
-            }`}
-          />
+          <RotateCcw size={12} />
+          <span>Reset</span>
         </button>
       </div>
 
-      {/* 2. Categories Checkboxes */}
+      {/* Role Type Filter */}
       <div>
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-          Categories
+        <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+          Role Type
         </h4>
-        <div className="space-y-2">
-          {CATEGORIES.map((cat) => {
-            const checked = filters.categories.includes(cat);
-            return (
-              <label
-                key={cat}
-                className="flex items-center gap-2.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer font-medium"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleCategory(cat)}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                />
-                <span>{cat}</span>
-              </label>
-            );
-          })}
+        <div className="space-y-1.5 text-xs font-semibold text-foreground">
+          {[
+            { label: "All Roles", value: "all" },
+            { label: "Full Time", value: "full-time" },
+            { label: "Internships", value: "internship" },
+            { label: "Contract", value: "contract" },
+          ].map((type) => (
+            <label
+              key={type.value}
+              className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-muted cursor-pointer"
+            >
+              <input
+                type="radio"
+                name="roleType"
+                value={type.value}
+                checked={selectedRoleType === type.value}
+                onChange={() => setSelectedRoleType(type.value)}
+                className="w-4 h-4 text-primary accent-primary cursor-pointer"
+              />
+              <span>{type.label}</span>
+            </label>
+          ))}
         </div>
       </div>
 
-      {/* 3. Experience Level */}
-      <div className="pt-4 border-t border-slate-100">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-          Experience Level
-        </h4>
-        <div className="space-y-2">
-          {EXPERIENCE_LEVELS.map((exp) => {
-            const checked = filters.experienceLevels.includes(exp.value);
-            return (
-              <label
-                key={exp.value}
-                className="flex items-center gap-2.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer font-medium"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleExperience(exp.value)}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                />
-                <span>{exp.label}</span>
-              </label>
-            );
-          })}
-        </div>
+      {/* Remote Only Toggle */}
+      <div className="pt-3 border-t border-border">
+        <label className="flex items-center justify-between p-2 bg-muted/50 rounded-xl cursor-pointer">
+          <span className="text-xs font-bold text-foreground">Remote Only</span>
+          <input
+            type="checkbox"
+            checked={isRemoteOnly}
+            onChange={(e) => setIsRemoteOnly(e.target.checked)}
+            className="w-4 h-4 text-primary accent-primary rounded cursor-pointer"
+          />
+        </label>
       </div>
 
-      {/* 4. Salary Range */}
-      <div className="pt-4 border-t border-slate-100">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-          Salary Range
+      {/* Categories Multi-Select */}
+      <div className="pt-3 border-t border-border">
+        <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+          Categories ({selectedCategories.length})
         </h4>
-        <div className="space-y-2">
-          {SALARY_RANGES.map((sal, idx) => {
-            const checked = filters.selectedSalaryIdx === idx;
+        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 text-xs font-medium text-foreground">
+          {JobCategories.map((cat, idx) => {
+            const isChecked = selectedCategories.includes(cat);
             return (
               <label
                 key={idx}
-                className="flex items-center gap-2.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer font-medium"
+                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-muted cursor-pointer"
               >
-                <input
-                  type="radio"
-                  name="salary_filter"
-                  checked={checked}
-                  onChange={() => toggleSalary(idx)}
-                  className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                />
-                <span>{sal.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleCategory(cat)}
+                    className="w-3.5 h-3.5 text-primary accent-primary rounded cursor-pointer shrink-0"
+                  />
+                  <span className="truncate">{cat}</span>
+                </div>
               </label>
             );
           })}
         </div>
       </div>
 
-      {/* 5. Job Type */}
-      <div className="pt-4 border-t border-slate-100">
-        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
-          Job Type
+      {/* Locations Multi-Select */}
+      <div className="pt-3 border-t border-border">
+        <h4 className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground mb-3">
+          Top Locations ({selectedLocations.length})
         </h4>
-        <div className="space-y-2">
-          {JOB_TYPES.map((type) => {
-            const checked = filters.jobTypes.includes(type.value);
+        <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 text-xs font-medium text-foreground">
+          {JobLocations.map((loc, idx) => {
+            const isChecked = selectedLocations.includes(loc);
             return (
               <label
-                key={type.value}
-                className="flex items-center gap-2.5 text-xs text-slate-600 hover:text-slate-900 cursor-pointer font-medium"
+                key={idx}
+                className="flex items-center justify-between p-1.5 rounded-lg hover:bg-muted cursor-pointer"
               >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleJobType(type.value)}
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                />
-                <span>{type.label}</span>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => toggleLocation(loc)}
+                    className="w-3.5 h-3.5 text-primary accent-primary rounded cursor-pointer shrink-0"
+                  />
+                  <span className="truncate">{loc}</span>
+                </div>
               </label>
             );
           })}

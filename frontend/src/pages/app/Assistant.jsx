@@ -1,400 +1,372 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles,
+  Send,
   Bot,
   User,
-  Send,
+  Sparkles,
   RefreshCw,
-  Zap,
-  Loader2,
-  AlertCircle,
   Copy,
   Check,
-  MessageSquare
+  AlertCircle,
+  MessageSquarePlus,
+  HelpCircle
 } from "lucide-react";
-import { useChat } from "../../hooks/useChat";
+import { io } from "socket.io-client";
+import { toast } from "react-hot-toast";
+import { AppContext } from "../../context/AppContext";
 import ResumeContextRail from "../../components/ResumeContextRail";
-
-// ── Custom Markdown Renderer for Assistant Responses ────────────────────────
-function renderAssistantMarkdown(text) {
-  if (!text) return null;
-
-  const lines = text.split("\n");
-  const elements = [];
-  let key = 0;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-
-    if (!line.trim()) {
-      elements.push(<div key={key++} className="h-2" />);
-      continue;
-    }
-
-    // Code block detection
-    if (line.startsWith("```")) {
-      const lang = line.slice(3).trim() || "code";
-      const codeLines = [];
-      i++;
-      while (i < lines.length && !lines[i].startsWith("```")) {
-        codeLines.push(lines[i]);
-        i++;
-      }
-      const codeString = codeLines.join("\n");
-      elements.push(
-        <div key={key++} className="my-3 rounded-xl bg-slate-900 text-slate-100 p-3.5 text-xs font-mono border border-slate-800 overflow-x-auto relative group">
-          <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[10px] text-slate-400 font-bold uppercase">
-            <span>{lang}</span>
-            <button
-              onClick={() => navigator.clipboard.writeText(codeString)}
-              className="hover:text-white transition-colors cursor-pointer flex items-center gap-1"
-            >
-              <Copy size={11} /> Copy
-            </button>
-          </div>
-          <pre className="whitespace-pre-wrap">{codeString}</pre>
-        </div>
-      );
-      continue;
-    }
-
-    // Bullet points
-    if (line.trim().startsWith("- ") || line.trim().startsWith("• ") || line.trim().startsWith("* ")) {
-      const content = line.replace(/^[\s\-•*]+/, "");
-      elements.push(
-        <div key={key++} className="flex items-start gap-2.5 my-1.5 pl-1 text-sm leading-relaxed text-slate-800">
-          <span className="text-indigo-600 font-black text-base shrink-0 leading-none mt-1">▸</span>
-          <div>{parseInline(content)}</div>
-        </div>
-      );
-      continue;
-    }
-
-    // Numbered list (e.g. 1. , 2. )
-    if (/^\d+\.\s/.test(line.trim())) {
-      const match = line.trim().match(/^(\d+)\.\s(.*)/);
-      if (match) {
-        elements.push(
-          <div key={key++} className="flex items-start gap-2 my-1.5 pl-1 text-sm leading-relaxed text-slate-800">
-            <span className="text-indigo-600 font-bold text-xs bg-indigo-50 px-1.5 py-0.5 rounded shrink-0 mt-0.5">
-              {match[1]}.
-            </span>
-            <div>{parseInline(match[2])}</div>
-          </div>
-        );
-        continue;
-      }
-    }
-
-    // Section Headings (##, ###)
-    if (line.startsWith("## ") || line.startsWith("### ")) {
-      const content = line.replace(/^#{2,3}\s/, "");
-      elements.push(
-        <h4 key={key++} className="font-extrabold text-slate-900 text-sm sm:text-base mt-4 mb-1.5 text-indigo-950">
-          {parseInline(content)}
-        </h4>
-      );
-      continue;
-    }
-
-    // Standard Paragraph
-    elements.push(
-      <p key={key++} className="my-1.5 text-sm leading-relaxed text-slate-800">
-        {parseInline(line)}
-      </p>
-    );
-  }
-
-  return elements;
-}
-
-function parseInline(text) {
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return <strong key={i} className="font-bold text-slate-900">{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return (
-        <code key={i} className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-mono font-medium border border-indigo-100">
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
-    return part;
-  });
-}
-
-// ── Streaming Cursor Indicator ──────────────────────────────────────────────
-function StreamingCursor() {
-  return (
-    <motion.span
-      animate={{ opacity: [1, 0, 1] }}
-      transition={{ repeat: Infinity, duration: 0.8 }}
-      className="inline-block ml-1 text-indigo-600 font-black text-sm"
-    >
-      ▋
-    </motion.span>
-  );
-}
-
-// ── Suggested Prompt Chips ──────────────────────────────────────────────────
-const QUICK_SUGGESTIONS = [
-  "What jobs match my resume profile?",
-  "What skills should I add for Google AI roles?",
-  "Review my experience gaps & weaknesses",
-  "Suggest 3 portfolio projects for Python Backend",
-];
+import api from "../../utils/api";
 
 const Assistant = () => {
-  const { messages, sendMessage, clearMessages, isConnected, isStreaming, error } = useChat();
-  const [inputText, setInputText] = useState("");
+  const { token, userData } = useContext(AppContext);
   const location = useLocation();
-  const chatBottomRef = useRef(null);
-  const textareaRef = useRef(null);
-  const initialSentRef = useRef(false);
 
-  // Auto-scroll on new tokens
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  const socketRef = useRef(null);
+  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+
+  const quickPrompts = [
+    "What jobs match my resume best?",
+    "Find remote Python / FastAPI roles",
+    "Identify my skills gap for AI Engineer positions",
+    "How can I improve my project bullet points?",
+  ];
+
+  // Initialize Socket.IO connection
   useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+    const socketUrl = baseUrl.replace(/\/api\/?$/, "");
+
+    const socket = io(socketUrl, {
+      path: "/ws/socket.io",
+      auth: { token },
+      transports: ["websocket", "polling"],
+    });
+
+    socketRef.current = socket;
+
+    socket.on("connect", () => {
+      console.log("Connected to AI Chat Socket");
+    });
+
+    socket.on("chunk", (data) => {
+      const chunkText = typeof data === "string" ? data : (data?.chunk || data?.content || "");
+      if (!chunkText) return;
+
+      setMessages((prev) => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg && lastMsg.role === "assistant" && lastMsg.isStreaming) {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...lastMsg,
+            content: lastMsg.content + chunkText,
+          };
+          return updated;
+        } else {
+          return [
+            ...prev,
+            {
+              role: "assistant",
+              content: chunkText,
+              isStreaming: true,
+              timestamp: new Date(),
+            },
+          ];
+        }
+      });
+    });
+
+    socket.on("done", () => {
+      setIsStreaming(false);
+      setMessages((prev) => {
+        const lastMsg = prev[prev.length - 1];
+        if (lastMsg && lastMsg.role === "assistant") {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            ...lastMsg,
+            isStreaming: false,
+          };
+          return updated;
+        }
+        return prev;
+      });
+    });
+
+    socket.on("error", (err) => {
+      setIsStreaming(false);
+      const errMsg = typeof err === "string" ? err : (err?.message || "AI response failed");
+      toast.error(errMsg);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [token]);
+
+  // Load chat history from REST API on mount
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const { data } = await api.get("/student/chat-history");
+        if (data && Array.isArray(data) && data.length > 0) {
+          setMessages(
+            data.map((item) => ({
+              role: item.role || (item.is_user ? "user" : "assistant"),
+              content: item.content || item.message,
+              timestamp: item.timestamp || new Date(),
+              isStreaming: false,
+            }))
+          );
+        } else {
+          // Welcome greeting
+          setMessages([
+            {
+              role: "assistant",
+              content: `Hello ${userData?.full_name?.split(" ")[0] || "there"}! I'm your AI Career Coach. I have direct access to your parsed resume profile and verified job postings.\n\nHow can I help you accelerate your job search today?`,
+              timestamp: new Date(),
+              isStreaming: false,
+            },
+          ]);
+        }
+      } catch (err) {
+        setMessages([
+          {
+            role: "assistant",
+            content: "Hello! I'm your AI Career Coach. Ask me about job matches, skill gaps, or resume optimization advice.",
+            timestamp: new Date(),
+            isStreaming: false,
+          },
+        ]);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  // Handle incoming initial prompt from navigation state
+  useEffect(() => {
+    if (location.state?.initialPrompt) {
+      const prompt = location.state.initialPrompt;
+      window.history.replaceState({}, document.title);
+      setTimeout(() => {
+        handleSendMessage(prompt);
+      }, 300);
+    }
+  }, [location.state]);
+
+  // Auto-scroll to bottom of messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isStreaming]);
 
-  // Handle initial prompt passed from navigation state (e.g. from Overview / Hero)
-  useEffect(() => {
-    if (location.state?.initialPrompt && isConnected && !initialSentRef.current) {
-      initialSentRef.current = true;
-      sendMessage(location.state.initialPrompt);
-    }
-  }, [location.state, isConnected, sendMessage]);
+  const handleSendMessage = (textToSend) => {
+    const messageText = (textToSend || inputValue).trim();
+    if (!messageText || isStreaming) return;
 
-  const handleSend = useCallback(() => {
-    const trimmed = inputText.trim();
-    if (!trimmed || isStreaming) return;
-    setInputText("");
-    sendMessage(trimmed);
-  }, [inputText, isStreaming, sendMessage]);
+    // Add user message
+    const userMessage = {
+      role: "user",
+      content: messageText,
+      timestamp: new Date(),
+    };
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsStreaming(true);
+
+    // Send to WebSocket
+    if (socketRef.current && socketRef.current.connected) {
+      socketRef.current.emit("message", { message: messageText });
+    } else {
+      // Fallback REST HTTP endpoint
+      api
+        .post("/student/chat", { message: messageText })
+        .then(({ data }) => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: data.reply || data.response || "No response received",
+              timestamp: new Date(),
+              isStreaming: false,
+            },
+          ]);
+        })
+        .catch((err) => {
+          toast.error("Failed to send message via HTTP fallback");
+        })
+        .finally(() => {
+          setIsStreaming(false);
+        });
     }
   };
 
-  const handleChipClick = (chip) => {
-    if (isStreaming) return;
-    sendMessage(chip);
+  const copyToClipboard = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(idx);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        role: "assistant",
+        content: "Chat cleared. What career goals or matching opportunities would you like to explore?",
+        timestamp: new Date(),
+        isStreaming: false,
+      },
+    ]);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Sparkles className="text-indigo-600" size={26} />
-            <span>AI Career Assistant</span>
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Real-time streaming career guidance context-aware to your resume profile.
-          </p>
-        </div>
-
-        {/* Live Status Pill */}
-        <div className="flex items-center gap-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-xs text-xs font-bold">
-            {isConnected ? (
-              <>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-emerald-700">Socket.IO Live Streaming</span>
-              </>
-            ) : (
-              <>
-                <Loader2 size={12} className="animate-spin text-amber-500" />
-                <span className="text-amber-700">Connecting to LLM...</span>
-              </>
-            )}
+      {/* Left / Main Workspace: Full-Page Chat (8 cols on lg) */}
+      <div className="lg:col-span-8 flex flex-col h-[calc(100vh-8rem)] bg-card rounded-2xl border border-border shadow-xs overflow-hidden">
+        
+        {/* Chat Header Bar */}
+        <div className="px-5 py-4 border-b border-border bg-card flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shadow-xs">
+              <Bot size={20} />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
+                <span>AI Career Assistant</span>
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Socket.IO Token Streaming • LangChain Powered
+              </p>
+            </div>
           </div>
 
           <button
-            onClick={clearMessages}
+            onClick={clearChat}
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer text-xs font-semibold flex items-center gap-1.5"
             title="Reset Conversation"
-            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:bg-slate-50 shadow-xs transition-colors cursor-pointer"
           >
-            <RefreshCw size={16} />
+            <RefreshCw size={14} />
+            <span className="hidden sm:inline">Reset</span>
           </button>
         </div>
-      </div>
 
-      {/* Main 2-Column Workspace */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column: Full-Height Chat Console (8 cols on lg) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col h-[700px] overflow-hidden">
-          
-          {/* Chat Window Header */}
-          <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-xs">
-                <Bot size={20} />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm text-slate-900">CareerPilot Coach</h3>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Gemini 3.1 Flash • FAISS Intent Vector Search
-                </p>
-              </div>
-            </div>
-            <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
-              Resume Injected
-            </span>
-          </div>
-
-          {/* Messages Scroll Area */}
-          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-            
-            {/* Empty State / Welcome Screen */}
-            {messages.length === 0 && (
-              <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto py-10">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 shadow-xs border border-indigo-100">
-                  <Bot size={28} />
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2">
-                  How can I help your career today?
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 mb-6 leading-relaxed">
-                  Ask for job recommendations, resume skill gap analysis, interview preparation tips, or tech stack roadmaps.
-                </p>
-
-                {/* Suggestion Chips */}
-                <div className="w-full space-y-2">
-                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400 text-left">
-                    Suggested Prompts:
-                  </p>
-                  {QUICK_SUGGESTIONS.map((chip, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleChipClick(chip)}
-                      className="w-full text-left p-3 rounded-xl bg-slate-50 hover:bg-indigo-50/70 border border-slate-200/80 hover:border-indigo-200 text-xs sm:text-sm font-semibold text-slate-700 hover:text-indigo-700 transition-all flex items-center justify-between group cursor-pointer"
-                    >
-                      <span className="flex items-center gap-2">
-                        <MessageSquare size={14} className="text-indigo-500" />
-                        {chip}
-                      </span>
-                      <span className="text-slate-400 group-hover:text-indigo-600 transition-colors">
-                        →
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Render Messages */}
-            {messages.map((msg, idx) => {
-              const isUser = msg.role === "user";
-              return (
-                <motion.div
-                  key={msg.id || idx}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex items-start gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}
+        {/* Messages Stream Container */}
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"
+        >
+          {messages.map((msg, idx) => {
+            const isUser = msg.role === "user";
+            return (
+              <div
+                key={idx}
+                className={`flex gap-3 items-start ${isUser ? "flex-row-reverse" : "flex-row"}`}
+              >
+                {/* Avatar Icon */}
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
+                    isUser
+                      ? "bg-primary text-primary-foreground shadow-2xs"
+                      : "bg-muted text-foreground border border-border"
+                  }`}
                 >
-                  {/* Avatar */}
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-xs ${
-                      isUser
-                        ? "bg-slate-800"
-                        : "bg-gradient-to-tr from-indigo-600 to-violet-600"
-                    }`}
-                  >
-                    {isUser ? <User size={16} /> : <Bot size={16} />}
-                  </div>
+                  {isUser ? <User size={15} /> : <Bot size={15} />}
+                </div>
 
-                  {/* Message Bubble */}
-                  <div
-                    className={`max-w-[82%] sm:max-w-[78%] rounded-2xl px-4 py-3.5 shadow-xs ${
-                      isUser
-                        ? "bg-slate-900 text-white text-sm font-medium rounded-tr-xs"
-                        : "bg-slate-50 border border-slate-200/80 text-slate-900 rounded-tl-xs"
-                    }`}
-                  >
-                    {isUser ? (
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                        {msg.content}
-                      </p>
-                    ) : (
-                      <div className="prose prose-sm max-w-none text-slate-900">
-                        {renderAssistantMarkdown(msg.content)}
-                        {msg.streaming && <StreamingCursor />}
-                      </div>
+                {/* Message Bubble Card */}
+                <div
+                  className={`relative max-w-[85%] rounded-2xl p-4 text-xs sm:text-sm leading-relaxed ${
+                    isUser
+                      ? "bg-primary text-primary-foreground font-medium rounded-tr-xs shadow-xs"
+                      : "bg-muted/40 text-foreground border border-border rounded-tl-xs"
+                  }`}
+                >
+                  {/* Markdown text representation */}
+                  <div className="whitespace-pre-wrap font-sans">
+                    {msg.content}
+                    {msg.isStreaming && (
+                      <span className="inline-block w-1.5 h-3.5 bg-primary ml-1 animate-pulse align-middle" />
                     )}
                   </div>
-                </motion.div>
-              );
-            })}
 
-            {/* Error Display */}
-            {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
-                <AlertCircle size={15} className="shrink-0" />
-                <span>{error}</span>
+                  {/* Copy Button for Assistant responses */}
+                  {!isUser && !msg.isStreaming && (
+                    <button
+                      onClick={() => copyToClipboard(msg.content, idx)}
+                      className="absolute bottom-2 right-2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-card transition-colors opacity-70 hover:opacity-100"
+                      title="Copy response"
+                    >
+                      {copiedIndex === idx ? (
+                        <Check size={12} className="text-primary" />
+                      ) : (
+                        <Copy size={12} />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
 
-            <div ref={chatBottomRef} />
-          </div>
-
-          {/* Bottom Input Area */}
-          <div className="p-3 sm:p-4 border-t border-slate-100 bg-white">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
-              }}
-              className="flex items-center gap-2.5 bg-slate-50 border border-slate-200/80 focus-within:border-indigo-500 focus-within:bg-white rounded-2xl p-2 transition-all shadow-xs"
+        {/* Suggestion Prompt Chips */}
+        <div className="px-4 py-2 border-t border-border bg-card flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0 flex items-center gap-1">
+            <Sparkles size={11} className="text-primary" /> Prompts:
+          </span>
+          {quickPrompts.map((prompt, idx) => (
+            <button
+              key={idx}
+              disabled={isStreaming}
+              onClick={() => handleSendMessage(prompt)}
+              className="text-[11px] font-medium bg-muted hover:bg-muted/80 text-foreground border border-border px-3 py-1 rounded-full shrink-0 transition-colors cursor-pointer"
             >
-              <textarea
-                ref={textareaRef}
-                rows={1}
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about jobs, resume improvements, tech stacks..."
-                className="flex-1 bg-transparent resize-none outline-none text-xs sm:text-sm text-slate-900 placeholder-slate-400 font-medium px-2 py-1 max-h-32"
-              />
-
-              <button
-                type="submit"
-                disabled={!inputText.trim() || isStreaming}
-                className={`p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white transition-all shadow-xs shrink-0 cursor-pointer ${
-                  !inputText.trim() || isStreaming
-                    ? "opacity-40 cursor-not-allowed"
-                    : "hover:shadow-md hover:scale-105 active:scale-95"
-                }`}
-              >
-                {isStreaming ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Send size={16} />
-                )}
-              </button>
-            </form>
-            <p className="text-[10px] text-slate-400 text-center mt-2">
-              Shift + Enter for new line • Responses are context-aware to your resume profile
-            </p>
-          </div>
-
+              {prompt}
+            </button>
+          ))}
         </div>
 
-        {/* Right Column: Resume Context Rail (4 cols on lg) */}
-        <div className="lg:col-span-4">
-          <ResumeContextRail />
-        </div>
+        {/* Input Bar */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="p-3 sm:p-4 border-t border-border bg-card flex items-center gap-2"
+        >
+          <input
+            type="text"
+            placeholder="Ask about matching roles, interview prep, skill gaps..."
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            disabled={isStreaming}
+            className="flex-1 bg-input/70 border border-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:bg-card transition-all font-medium"
+          />
+          <button
+            type="submit"
+            disabled={!inputValue.trim() || isStreaming}
+            className={`bg-primary text-primary-foreground font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-[0.98] text-xs flex items-center gap-1.5 cursor-pointer ${
+              !inputValue.trim() || isStreaming ? "opacity-50 cursor-not-allowed" : "hover:bg-primary/90"
+            }`}
+          >
+            <span>Send</span>
+            <Send size={13} />
+          </button>
+        </form>
 
+      </div>
+
+      {/* Right: Live Resume Context Rail (4 cols on lg) */}
+      <div className="lg:col-span-4">
+        <ResumeContextRail />
       </div>
 
     </div>

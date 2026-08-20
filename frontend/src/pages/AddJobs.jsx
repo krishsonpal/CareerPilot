@@ -96,21 +96,21 @@ const AddJobs = () => {
       
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2.5">
-          <PlusCircle className="text-indigo-600" size={26} />
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground tracking-tight flex items-center gap-2.5">
+          <PlusCircle className="text-primary" size={26} />
           <span>Post a New Job Opportunity</span>
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Your job posting will be vectorized into the FAISS semantic matching database automatically.
         </p>
       </div>
 
       {/* Form Card */}
-      <form onSubmit={postJob} className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
+      <form onSubmit={postJob} className="bg-card rounded-2xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
         
         {/* Role Title */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
             Job Title *
           </label>
           <input
@@ -118,7 +118,7 @@ const AddJobs = () => {
             placeholder="e.g. Senior AI Research Engineer"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
+            className="w-full bg-input/70 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium"
             required
           />
         </div>
@@ -126,13 +126,13 @@ const AddJobs = () => {
         {/* Row 2: Job Type & Experience Level */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Job Type *
             </label>
             <select
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium cursor-pointer"
+              className="w-full bg-input/70 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium cursor-pointer"
             >
               <option value="full-time">Full Time</option>
               <option value="internship">Internship</option>
@@ -141,13 +141,13 @@ const AddJobs = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Experience Level *
             </label>
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium cursor-pointer"
+              className="w-full bg-input/70 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium cursor-pointer"
             >
               <option value="entry-level">Entry Level</option>
               <option value="mid-level">Mid Level</option>
@@ -160,33 +160,33 @@ const AddJobs = () => {
         {/* Row 3: Salary Min & Salary Max */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Salary Min (USD/year)
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">$</span>
               <input
                 type="number"
                 placeholder="100000"
                 value={salaryMin}
                 onChange={(e) => setSalaryMin(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
+                className="w-full bg-input/70 border border-border rounded-xl pl-8 pr-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
               Salary Max (USD/year)
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">$</span>
               <input
                 type="number"
                 placeholder="150000"
                 value={salaryMax}
                 onChange={(e) => setSalaryMax(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
+                className="w-full bg-input/70 border border-border rounded-xl pl-8 pr-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium"
               />
             </div>
           </div>
@@ -194,22 +194,22 @@ const AddJobs = () => {
 
         {/* Row 4: Location & Remote Checkbox */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200/80">
+          <div className="flex items-center justify-between p-3.5 bg-muted/40 rounded-xl border border-border">
             <div>
-              <p className="text-xs font-bold text-slate-900">Remote Position</p>
-              <p className="text-[11px] text-slate-400">Can candidates work from anywhere?</p>
+              <p className="text-xs font-bold text-foreground">Remote Position</p>
+              <p className="text-[11px] text-muted-foreground">Can candidates work from anywhere?</p>
             </div>
             <input
               type="checkbox"
               checked={isRemote}
               onChange={(e) => setIsRemote(e.target.checked)}
-              className="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 cursor-pointer"
+              className="w-5 h-5 text-primary accent-primary rounded cursor-pointer"
             />
           </div>
 
           {!isRemote && (
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
                 Office Location
               </label>
               <input
@@ -217,7 +217,7 @@ const AddJobs = () => {
                 placeholder="e.g. San Francisco, CA"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
+                className="w-full bg-input/70 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium"
               />
             </div>
           )}
@@ -225,7 +225,7 @@ const AddJobs = () => {
 
         {/* Row 5: Skills Required (Comma-separated) */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
             Skills Required (Comma separated) *
           </label>
           <input
@@ -233,30 +233,30 @@ const AddJobs = () => {
             placeholder="e.g. Python, FastAPI, Docker, PyTorch, SQL, Vector Embeddings"
             value={skillsRequired}
             onChange={(e) => setSkillsRequired(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all font-medium"
+            className="w-full bg-input/70 border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none focus:bg-card focus:border-primary transition-all font-medium"
             required
           />
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1">
             These skills feed into the semantic FAISS matching engine to rank candidates.
           </p>
         </div>
 
         {/* Row 6: Rich Text Description */}
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
             Job Description & Responsibilities *
           </label>
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
             <div ref={editorRef} className="h-48" />
           </div>
         </div>
 
         {/* Submit Action */}
-        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <div className="pt-4 border-t border-border flex items-center justify-end gap-3">
           <button
             type="button"
             onClick={() => navigate("/dashboard/manage-jobs")}
-            className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+            className="px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground text-xs font-bold rounded-xl transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -264,7 +264,7 @@ const AddJobs = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer ${
+            className={`px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2 cursor-pointer ${
               loading ? "opacity-60 cursor-not-allowed" : "active:scale-[0.98]"
             }`}
           >

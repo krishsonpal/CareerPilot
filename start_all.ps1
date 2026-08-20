@@ -23,7 +23,7 @@ try {
     Write-Host "[Check] ✅ Redis is running" -ForegroundColor Green
 } catch {
     Write-Host "[Check] ⚠️  Redis is NOT running on port 6379." -ForegroundColor Red
-    Write-Host "        Start it with: docker run -d -p 6379:6379 redis:7-alpine" -ForegroundColor Red
+    Write-Host ("        Start it with: docker run -d -p 6379:6379 redis:7-alpine") -ForegroundColor Red
     Write-Host "        The worker service requires Redis to start." -ForegroundColor Red
     Write-Host ""
 }

@@ -6,11 +6,9 @@ import {
   Users,
   LogOut,
   Bell,
-  Building2,
   Sparkles,
   Menu,
   X,
-  ChevronRight
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppContext } from "../context/AppContext";
@@ -39,22 +37,22 @@ const RecruiterLayout = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-row">
+    <div className="min-h-screen bg-background text-foreground flex flex-row">
       
-      {/* Desktop Sidebar (Matching Screen 3 white/indigo theme) */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200/80 flex-col justify-between shrink-0 min-h-screen sticky top-0 z-30">
+      {/* Desktop Sidebar (Supabase Theme) */}
+      <aside className="hidden lg:flex w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex-col justify-between shrink-0 min-h-screen sticky top-0 z-30">
         <div>
           {/* Brand */}
-          <div className="h-18 flex items-center px-6 border-b border-slate-100">
+          <div className="h-18 flex items-center px-6 border-b border-sidebar-border">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 rounded-xl flex items-center justify-center shadow-md text-white font-black text-base group-hover:scale-105 transition-transform">
+              <div className="w-9 h-9 bg-primary text-primary-foreground rounded-xl flex items-center justify-center font-black text-base shadow-xs group-hover:scale-105 transition-transform">
                 CP
               </div>
               <div className="flex flex-col">
-                <span className="text-lg font-extrabold text-slate-900 tracking-tight leading-tight">
+                <span className="text-lg font-extrabold text-foreground tracking-tight leading-tight">
                   CareerPilot
                 </span>
-                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-widest">
                   Employer Portal
                 </span>
               </div>
@@ -72,8 +70,8 @@ const RecruiterLayout = () => {
                   className={({ isActive }) =>
                     `flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-semibold transition-all group ${
                       isActive
-                        ? "bg-slate-900 text-white shadow-md shadow-slate-900/20 font-bold"
-                        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                        ? "bg-primary text-primary-foreground font-bold shadow-xs shadow-primary/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
                     }`
                   }
                 >
@@ -82,7 +80,7 @@ const RecruiterLayout = () => {
                       <Icon
                         size={18}
                         className={`transition-colors ${
-                          isActive ? "text-white" : "text-slate-400 group-hover:text-slate-900"
+                          isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
                         }`}
                       />
                       <span>{item.name}</span>
@@ -95,17 +93,17 @@ const RecruiterLayout = () => {
         </div>
 
         {/* Bottom Company Profile & Logout */}
-        <div className="p-4 border-t border-slate-100">
-          <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60 flex items-center justify-between gap-3 mb-2">
+        <div className="p-4 border-t border-sidebar-border">
+          <div className="bg-muted/50 rounded-2xl p-3 border border-border flex items-center justify-between gap-3 mb-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-foreground text-background flex items-center justify-center font-bold text-xs shrink-0">
                 {userData?.company_name?.charAt(0) || "C"}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 truncate">
+                <p className="text-xs font-bold text-foreground truncate">
                   {userData?.company_name || userData?.name || "Company"}
                 </p>
-                <p className="text-[11px] text-slate-400 truncate">
+                <p className="text-[11px] text-muted-foreground truncate">
                   {userData?.email || "Employer"}
                 </p>
               </div>
@@ -114,14 +112,14 @@ const RecruiterLayout = () => {
             <button
               onClick={() => logout()}
               title="Sign Out"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer shrink-0"
             >
               <LogOut size={16} />
             </button>
           </div>
 
-          <div className="text-[11px] text-slate-400 text-center flex items-center justify-center gap-1">
-            <Sparkles size={12} className="text-indigo-600" />
+          <div className="text-[11px] text-muted-foreground text-center flex items-center justify-center gap-1">
+            <Sparkles size={12} className="text-primary" />
             <span>AI ATS Evaluator Online</span>
           </div>
         </div>
@@ -136,19 +134,19 @@ const RecruiterLayout = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMobileMenuOpen(false)}
-              className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+              className="fixed inset-0 bg-background/80 backdrop-blur-xs"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative z-10 w-64 bg-white min-h-screen shadow-2xl flex flex-col justify-between"
+              className="relative z-10 w-64 bg-sidebar text-sidebar-foreground border-r border-sidebar-border min-h-screen shadow-2xl flex flex-col justify-between"
             >
               <div>
-                <div className="h-18 flex items-center justify-between px-6 border-b border-slate-100">
-                  <span className="text-lg font-extrabold text-slate-900">CareerPilot</span>
-                  <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-slate-400">
+                <div className="h-18 flex items-center justify-between px-6 border-b border-sidebar-border">
+                  <span className="text-lg font-extrabold text-foreground">CareerPilot</span>
+                  <button onClick={() => setMobileMenuOpen(false)} className="p-1 text-muted-foreground">
                     <X size={20} />
                   </button>
                 </div>
@@ -160,7 +158,7 @@ const RecruiterLayout = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold ${
-                          isActive ? "bg-slate-900 text-white font-bold" : "text-slate-600"
+                          isActive ? "bg-primary text-primary-foreground font-bold" : "text-muted-foreground"
                         }`
                       }
                     >
@@ -179,19 +177,19 @@ const RecruiterLayout = () => {
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         
         {/* Recruiter Topbar */}
-        <header className="h-18 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
+        <header className="h-18 bg-card/85 backdrop-blur-md border-b border-border px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100"
+              className="lg:hidden p-2 rounded-xl text-foreground hover:bg-muted"
             >
               <Menu size={20} />
             </button>
             <div className="hidden sm:block">
-              <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-extrabold text-muted-foreground uppercase tracking-wider">
                 Recruitment Dashboard
               </span>
-              <p className="text-sm font-bold text-slate-900">
+              <p className="text-sm font-bold text-foreground">
                 {userData?.company_name || "Company Workspace"}
               </p>
             </div>
@@ -200,7 +198,7 @@ const RecruiterLayout = () => {
           <div className="flex items-center gap-3">
             <Link
               to="/dashboard/add-job"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all active:scale-[0.98]"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 font-bold text-xs rounded-xl shadow-xs transition-all active:scale-[0.98]"
             >
               <PlusCircle size={14} />
               <span>Post New Role</span>
@@ -208,7 +206,7 @@ const RecruiterLayout = () => {
 
             <button
               title="Notifications"
-              className="p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
             >
               <Bell size={18} />
             </button>

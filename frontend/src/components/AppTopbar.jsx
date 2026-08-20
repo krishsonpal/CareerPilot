@@ -1,86 +1,85 @@
 import React, { useContext, useState } from "react";
+import { Search, Bell, Sparkles, Menu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Search, Bell, Sparkles, Menu, X } from "lucide-react";
 import { AppContext } from "../context/AppContext";
 
 const AppTopbar = ({ onToggleMobileMenu }) => {
   const { userData, setSearchFilter, setIsSearched } = useContext(AppContext);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleGlobalSearch = (e) => {
     e.preventDefault();
-    if (searchValue.trim()) {
-      setSearchFilter((prev) => ({ ...prev, title: searchValue.trim() }));
-      setIsSearched(true);
-      navigate("/app/jobs");
-    }
+    if (!searchInput.trim()) return;
+
+    setSearchFilter({
+      title: searchInput.trim(),
+      location: "",
+    });
+    setIsSearched(true);
+    navigate("/app/jobs");
   };
 
   return (
-    <header className="h-18 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
+    <header className="h-18 bg-card/85 backdrop-blur-md border-b border-border px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
       
-      {/* Left: Mobile Menu Toggle & Global Search Pill */}
+      {/* Left: Mobile Menu Toggle & Search Pill Bar */}
       <div className="flex items-center gap-3 flex-1 max-w-xl">
         <button
           onClick={onToggleMobileMenu}
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
-          aria-label="Toggle Menu"
+          className="lg:hidden p-2 rounded-xl text-foreground hover:bg-muted focus:outline-none cursor-pointer"
+          aria-label="Open Navigation"
         >
           <Menu size={20} />
         </button>
 
-        {/* Global Search Pill Bar (from Screen 3) */}
-        <form onSubmit={handleSearch} className="w-full relative">
+        <form
+          onSubmit={handleGlobalSearch}
+          className="w-full relative flex items-center"
+        >
           <Search
             size={16}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            className="absolute left-3.5 text-muted-foreground pointer-events-none"
           />
           <input
             type="text"
-            placeholder="Search by role, skills, or query (e.g. Remote Python FAISS)..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200/80 focus:border-indigo-500 rounded-full pl-9 pr-4 py-2 text-xs sm:text-sm text-slate-900 outline-none transition-all placeholder-slate-400 font-medium"
+            placeholder="Search AI jobs, tech skills, companies..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full bg-input/70 border border-border rounded-xl pl-9 pr-4 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary focus:bg-card transition-all font-medium"
           />
         </form>
       </div>
 
-      {/* Right Controls */}
-      <div className="flex items-center gap-3 sm:gap-4 shrink-0 ml-4">
+      {/* Right: Status Pill & Avatar */}
+      <div className="flex items-center gap-3 sm:gap-4 shrink-0 pl-3">
         
-        {/* Quick AI Help Badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">
-          <Sparkles size={13} className="text-indigo-600" />
-          <span>FAISS Engine Online</span>
+        {/* Real-time Match Engine Status Pill */}
+        <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-xs font-bold text-foreground">
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span>Semantic Match Ready</span>
         </div>
 
-        {/* Notifications Bell */}
+        {/* Notifications Icon */}
         <button
           title="Notifications"
-          className="relative p-2 rounded-full text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+          className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
         >
           <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-600 rounded-full ring-2 ring-white" />
         </button>
 
-        <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-
-        {/* User Pill */}
-        <div className="flex items-center gap-2.5">
+        {/* User Avatar */}
+        <div className="flex items-center gap-2">
           <img
             src={
               userData?.avatar_url ||
               `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                userData?.full_name || "Alex"
-              )}&background=6366f1&color=fff&bold=true`
+                userData?.full_name || "User"
+              )}&background=10b981&color=fff&bold=true`
             }
-            alt="User Avatar"
-            className="w-8 h-8 rounded-full object-cover ring-2 ring-indigo-500/20"
+            alt="Avatar"
+            className="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20"
           />
-          <span className="hidden sm:block text-xs font-bold text-slate-800 max-w-[120px] truncate">
-            {userData?.full_name?.split(" ")[0] || "Alex"}
-          </span>
         </div>
 
       </div>

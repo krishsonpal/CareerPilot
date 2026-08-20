@@ -1,26 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  BrainCircuit,
+  FileText,
   Sparkles,
-  UserCheck,
-  CheckCircle2,
-  AlertCircle,
   ExternalLink,
+  Layers,
   GraduationCap,
   Briefcase,
-  Target
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import api from "../utils/api";
-import Loader from "./Loader";
 
 const ResumeContextRail = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchResume = async () => {
-      setLoading(true);
+    const fetchProfile = async () => {
       try {
         const { data } = await api.get("/ai/resume");
         setProfile(data);
@@ -30,127 +27,116 @@ const ResumeContextRail = () => {
         setLoading(false);
       }
     };
-    fetchResume();
+    fetchProfile();
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-5">
+    <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-5">
       
-      {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+      {/* Top Header */}
+      <div className="flex items-center justify-between pb-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-            <BrainCircuit size={18} />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+            <FileText size={16} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              AI Resume Context
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-foreground">
+              Active Resume Context
             </h3>
-            <p className="text-[11px] text-slate-400">
-              Live context feeding LangChain
-            </p>
+            <p className="text-[11px] text-muted-foreground">Feeding LangChain & FAISS</p>
           </div>
         </div>
 
         <Link
           to="/app/profile"
-          title="Edit Profile & Resume"
-          className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 hover:underline"
+          className="text-muted-foreground hover:text-primary transition-colors p-1"
+          title="Edit Profile"
         >
-          <span>Edit</span>
-          <ExternalLink size={12} />
+          <ExternalLink size={14} />
         </Link>
       </div>
 
       {loading ? (
-        <div className="py-8 flex justify-center">
-          <Loader />
+        <div className="py-8 text-center">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">Reading vector context...</p>
         </div>
       ) : !profile ? (
-        <div className="bg-amber-50/70 border border-amber-200/70 rounded-xl p-4 text-center">
-          <AlertCircle size={20} className="text-amber-500 mx-auto mb-2" />
-          <p className="text-xs font-bold text-amber-900 mb-1">
-            No Resume Uploaded Yet
-          </p>
-          <p className="text-[11px] text-amber-700 mb-3">
-            Upload your PDF resume to give the AI coach tailored context on your career.
+        <div className="py-6 text-center space-y-2">
+          <AlertCircle size={24} className="text-muted-foreground mx-auto" />
+          <p className="text-xs font-bold text-foreground">No Resume Profile Active</p>
+          <p className="text-[11px] text-muted-foreground max-w-xs mx-auto">
+            Upload your resume PDF to provide your AI coach with verified project & skill context.
           </p>
           <Link
             to="/app/profile"
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg shadow-xs"
+            className="inline-block mt-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-bold rounded-xl shadow-xs"
           >
-            Upload Resume (PDF)
+            Upload Resume
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 text-xs">
           
-          {/* Active Extracted Skills */}
+          {/* Executive Summary */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Sparkles size={13} className="text-indigo-600" />
-                Active Skill Embeddings ({profile.skills?.length || 0})
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
-              {(profile.skills || []).map((skill, idx) => (
+            <h4 className="font-extrabold uppercase text-muted-foreground text-[10px] tracking-wider mb-1 flex items-center gap-1">
+              <Sparkles size={11} className="text-primary" />
+              <span>Extracted Summary</span>
+            </h4>
+            <p className="text-muted-foreground bg-muted/40 p-3 rounded-xl border border-border leading-relaxed line-clamp-4">
+              {profile.summary || "Summary extracted from uploaded resume."}
+            </p>
+          </div>
+
+          {/* Core Skills Chips */}
+          <div>
+            <h4 className="font-extrabold uppercase text-muted-foreground text-[10px] tracking-wider mb-1.5 flex items-center gap-1">
+              <Layers size={11} className="text-primary" />
+              <span>Key Skills Vectors ({(profile.skills || []).length})</span>
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {(profile.skills || []).slice(0, 10).map((skill, idx) => (
                 <span
                   key={idx}
-                  className="px-2.5 py-1 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 text-xs font-medium rounded-lg border border-slate-200/80 transition-colors"
+                  className="px-2 py-0.5 bg-muted text-foreground text-[11px] font-semibold rounded-md border border-border"
                 >
                   {skill}
                 </span>
               ))}
+              {(profile.skills?.length || 0) > 10 && (
+                <span className="px-2 py-0.5 bg-muted text-muted-foreground text-[11px] font-semibold rounded-md">
+                  +{profile.skills.length - 10} more
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Professional Summary Snippet */}
-          {profile.summary && (
-            <div className="pt-3 border-t border-slate-100">
-              <span className="text-xs font-bold text-slate-700 block mb-1.5">
-                Extracted Summary
-              </span>
-              <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                "{profile.summary}"
+          {/* Education Details */}
+          {profile.education && (
+            <div>
+              <h4 className="font-extrabold uppercase text-muted-foreground text-[10px] tracking-wider mb-1 flex items-center gap-1">
+                <GraduationCap size={11} className="text-primary" />
+                <span>Education</span>
+              </h4>
+              <p className="text-foreground font-semibold bg-muted/40 p-2.5 rounded-xl border border-border">
+                {typeof profile.education === "string"
+                  ? profile.education
+                  : Array.isArray(profile.education)
+                  ? profile.education[0]?.degree || profile.education[0]?.school || "Degree details"
+                  : "Higher Education"}
               </p>
             </div>
           )}
 
-          {/* Education & Experience Details */}
-          <div className="pt-3 border-t border-slate-100 space-y-2 text-xs text-slate-600">
-            {profile.education && (
-              <div className="flex items-start gap-2">
-                <GraduationCap size={15} className="text-indigo-600 shrink-0 mt-0.5" />
-                <span className="font-medium truncate">
-                  {typeof profile.education === "string"
-                    ? profile.education
-                    : Array.isArray(profile.education)
-                    ? profile.education[0]?.degree || profile.education[0]?.school || "Degree Listed"
-                    : "Degree Provided"}
-                </span>
-              </div>
-            )}
-            {profile.experience && (
-              <div className="flex items-start gap-2">
-                <Briefcase size={15} className="text-violet-600 shrink-0 mt-0.5" />
-                <span className="font-medium truncate">
-                  {typeof profile.experience === "string"
-                    ? profile.experience
-                    : Array.isArray(profile.experience)
-                    ? `${profile.experience.length} Experience Records`
-                    : "Experience Listed"}
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Live Context Verification Badge */}
-          <div className="p-3 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-            <p className="text-[11px] font-bold text-emerald-900">
-              Injected into LangChain Prompt Context
-            </p>
+          {/* Status Indicator */}
+          <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1 text-primary font-bold">
+              <CheckCircle2 size={12} /> FAISS 768-dim Vector Synced
+            </span>
+            <Link to="/app/profile" className="text-primary hover:underline font-bold">
+              Update
+            </Link>
           </div>
 
         </div>
