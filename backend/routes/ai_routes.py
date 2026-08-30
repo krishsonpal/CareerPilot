@@ -27,6 +27,7 @@ from db import schemas
 from db.crud import resume
 from utils.auth import require_student
 from utils.config import settings
+from utils.cloudinary_upload import upload_resume_to_cloudinary
 from utils.queue import enqueue_resume_parse, get_task_status
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,29 @@ async def upload_resume(
         logger.error("Resume file save failed: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to save uploaded file")
 
+    # ── Upload to Cloudinary (production) or use local path (dev) ─────────
+    # On Render, FastAPI and the Node.js worker run on separate machines so
+    # the worker cannot read a local file_path. Cloudinary bridges the gap.
+    worker_file_path = file_path  # default: local path (used in local dev)
+    try:
+        cloudinary_url = await upload_resume_to_cloudinary(
+            content=content,
+            user_id=user_id,
+            filename=safe_filename,
+        )
+        if cloudinary_url:
+            worker_file_path = cloudinary_url  # worker will download from URL
+            resume_url = cloudinary_url        # also use Cloudinary URL as resume_url
+            logger.info("Resume uploaded to Cloudinary for user=%s", user_id)
+    except RuntimeError as exc:
+        # Non-fatal in dev, but fatal in production
+        if settings.cloudinary_enabled:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Failed to upload resume to cloud storage: {exc}",
+            )
+        logger.warning("Cloudinary upload skipped (not configured): %s", exc)
+
     # ── Mark resume as processing in DB (pre-create row if not exists) ─────
     # This ensures GET /api/ai/resume/status can always find a row to check
     try:
@@ -111,7 +135,7 @@ async def upload_resume(
     try:
         task = await enqueue_resume_parse(
             user_id=user_id,
-            file_path=file_path,
+            file_path=worker_file_path,  # Cloudinary URL in prod, local path in dev
             resume_url=resume_url,
         )
     except RuntimeError as exc:

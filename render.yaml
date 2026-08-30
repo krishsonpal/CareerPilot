@@ -1,0 +1,171 @@
+# =============================================================================
+# CareerPilot — Render Blueprint (render.yaml)
+# Deploys the full stack as a Render "Blueprint" from the repository root.
+#
+# Services defined here:
+#   1. careerpilot-backend   — FastAPI (Python/Docker)  → Web Service
+#   2. careerpilot-worker    — BullMQ (Node.js/Docker)  → Background Worker
+#   3. careerpilot-frontend  — React (Static Site)      → Static Site
+#
+# External services (NOT managed by this file — configure in Render dashboard):
+#   • NeonDB (PostgreSQL)  — already configured
+#   • Upstash Redis        — add REDIS_URL env var below
+#   • Cloudinary           — add 3 CLOUDINARY_* env vars below
+#
+# Deploy: Push to GitHub → Render dashboard → "New Blueprint" → point to this file
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # [1] FastAPI Backend — Python Web Service
+  # ===========================================================================
+  - type: web
+    name: careerpilot-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    region: singapore          # Match the region closest to NeonDB ap-southeast-1
+    plan: starter              # $7/mo — always-on (free plan sleeps after 15min)
+    branch: main
+    healthCheckPath: /healthz
+
+    envVars:
+      # ── App ────────────────────────────────────────────────
+      - key: APP_ENV
+        value: production
+      - key: APP_NAME
+        value: CareerPilot
+      - key: APP_VERSION
+        value: 3.0.0
+      - key: PORT
+        value: "8000"
+
+      # ── NeonDB (PostgreSQL) ─────────────────────────────────
+      # Set this in Render dashboard → Environment → Secret
+      - key: DATABASE_URL
+        sync: false            # Set in dashboard: postgresql+asyncpg://...neon.tech/neondb
+
+      # ── Google Gemini ───────────────────────────────────────
+      - key: GOOGLE_API_KEY
+        sync: false            # Set in dashboard
+      - key: GEMINI_LLM_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: models/gemini-embedding-001
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+
+      # ── JWT Auth ────────────────────────────────────────────
+      - key: JWT_SECRET_KEY
+        sync: false            # Generate: openssl rand -hex 32
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: JWT_EXPIRE_MINUTES
+        value: "10080"
+
+      # ── CORS ────────────────────────────────────────────────
+      # Update after deploying frontend — set to the Static Site URL
+      - key: CORS_ORIGINS
+        sync: false            # e.g. https://careerpilot.onrender.com
+
+      # ── BullMQ Worker URL ───────────────────────────────────
+      # Set AFTER deploying the worker service below
+      - key: WORKER_SERVICE_URL
+        sync: false            # e.g. https://careerpilot-worker.onrender.com
+
+      # ── Cloudinary (resume file storage) ───────────────────
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # ── File uploads ────────────────────────────────────────
+      - key: UPLOAD_DIR
+        value: /tmp/uploads
+      - key: MAX_UPLOAD_SIZE_MB
+        value: "10"
+
+  # ===========================================================================
+  # [2] Node.js BullMQ Worker — Background Worker (no public URL needed)
+  # ===========================================================================
+  - type: worker
+    name: careerpilot-worker
+    runtime: docker
+    dockerfilePath: ./worker/Dockerfile
+    dockerContext: ./worker
+    region: singapore
+    plan: starter              # $7/mo — background workers need always-on
+    branch: main
+
+    envVars:
+      # ── Google Gemini ───────────────────────────────────────
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GEMINI_LLM_MODEL
+        value: gemini-2.0-flash
+      - key: GEMINI_EMBEDDING_MODEL
+        value: models/gemini-embedding-001
+      - key: GEMINI_EMBEDDING_DIM
+        value: "768"
+
+      # ── NeonDB (PostgreSQL) ─────────────────────────────────
+      # Node.js uses sync pg driver (no asyncpg prefix needed)
+      - key: DATABASE_URL
+        sync: false            # Set in dashboard: postgresql://...neon.tech/neondb
+
+      # ── Upstash Redis ───────────────────────────────────────
+      # Upstash provides a single REDIS_URL with TLS
+      - key: REDIS_URL
+        sync: false            # e.g. rediss://default:password@...upstash.io:6380
+      # Individual host/port (kept for backwards compat — REDIS_URL takes priority)
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        value: "6380"          # Upstash TLS port
+      - key: REDIS_PASSWORD
+        sync: false
+
+      # ── Worker HTTP Server ──────────────────────────────────
+      - key: WORKER_PORT
+        value: "3001"
+
+      # ── Backend callback ────────────────────────────────────
+      # Set to the backend Web Service URL after it's deployed
+      - key: API_BASE_URL
+        sync: false            # e.g. https://careerpilot-backend.onrender.com
+
+  # ===========================================================================
+  # [3] React Frontend — Static Site (free)
+  # ===========================================================================
+  - type: web
+    name: careerpilot-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    rootDir: ./frontend
+    branch: main
+    pullRequestPreviewsEnabled: false
+
+    headers:
+      # Cache static assets aggressively, HTML never
+      - path: /*
+        name: Cache-Control
+        value: public, max-age=0, must-revalidate
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+
+    routes:
+      # SPA fallback — all paths serve index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    envVars:
+      # Set to the deployed backend Web Service URL
+      - key: VITE_API_URL
+        sync: false            # e.g. https://careerpilot-backend.onrender.com
+      - key: VITE_WS_URL
+        sync: false            # Same URL (Socket.IO) e.g. https://careerpilot-backend.onrender.com

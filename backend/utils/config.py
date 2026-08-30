@@ -75,6 +75,23 @@ class Settings(BaseSettings):
     )
 
     # ------------------------------------------------------------------
+    # Cloudinary — Shared file storage (resumes uploaded here so Node.js
+    # worker can download them without needing a shared disk volume)
+    # ------------------------------------------------------------------
+    cloudinary_cloud_name: str = Field(default="", alias="CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str = Field(default="", alias="CLOUDINARY_API_KEY")
+    cloudinary_api_secret: str = Field(default="", alias="CLOUDINARY_API_SECRET")
+
+    @property
+    def cloudinary_enabled(self) -> bool:
+        """True when all three Cloudinary credentials are present."""
+        return bool(
+            self.cloudinary_cloud_name
+            and self.cloudinary_api_key
+            and self.cloudinary_api_secret
+        )
+
+    # ------------------------------------------------------------------
     # Render deployment — server port (Render injects PORT automatically)
     # ------------------------------------------------------------------
     port: int = Field(default=8000, alias="PORT")
