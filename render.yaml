@@ -26,7 +26,7 @@ services:
     dockerContext: ./backend
     region: singapore          # Match the region closest to NeonDB ap-southeast-1
     plan: free                 # Free tier (512MB RAM, sleeps after 15m inactivity)
-    branch: dev
+    branch: main
     healthCheckPath: /healthz
 
     envVars:
@@ -99,7 +99,7 @@ services:
     dockerContext: ./worker
     region: singapore
     plan: free                 # Free tier (512MB RAM)
-    branch: dev
+    branch: main
     healthCheckPath: /health
 
     envVars:
@@ -149,7 +149,7 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     rootDir: ./frontend
-    branch: dev
+    branch: main
     pullRequestPreviewsEnabled: false
 
     headers:
