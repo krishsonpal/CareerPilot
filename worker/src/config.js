@@ -64,7 +64,7 @@ export const config = {
 
   // HTTP server port (accepts job enqueue requests from Python FastAPI)
   server: {
-    port: parseInt(process.env.WORKER_PORT || "3001", 10),
+    port: parseInt(process.env.PORT || process.env.WORKER_PORT || "3001", 10),
   },
 
   // Python FastAPI base URL (for internal callbacks if needed)

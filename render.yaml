@@ -1,23 +1,23 @@
 # =============================================================================
 # CareerPilot — Render Blueprint (render.yaml)
-# Deploys the full stack as a Render "Blueprint" from the repository root.
+# 100% Free Tier Configuration (Zero Payment / No Credit Card Required)
 #
 # Services defined here:
-#   1. careerpilot-backend   — FastAPI (Python/Docker)  → Web Service
-#   2. careerpilot-worker    — BullMQ (Node.js/Docker)  → Background Worker
-#   3. careerpilot-frontend  — React (Static Site)      → Static Site
+#   1. careerpilot-backend   — FastAPI (Python/Docker)  → Web Service (Free)
+#   2. careerpilot-worker    — BullMQ (Node.js/Docker)  → Web Service (Free)
+#   3. careerpilot-frontend  — React (Static Site)      → Static Site (Free)
 #
-# External services (NOT managed by this file — configure in Render dashboard):
-#   • NeonDB (PostgreSQL)  — already configured
-#   • Upstash Redis        — add REDIS_URL env var below
-#   • Cloudinary           — add 3 CLOUDINARY_* env vars below
+# External free-tier services (configured via environment variables):
+#   • NeonDB (Serverless PostgreSQL) — permanent free tier
+#   • Upstash Redis (Serverless)      — 10,000 free commands/day
+#   • Cloudinary                     — free storage tier
 #
 # Deploy: Push to GitHub → Render dashboard → "New Blueprint" → point to this file
 # =============================================================================
 
 services:
   # ===========================================================================
-  # [1] FastAPI Backend — Python Web Service
+  # [1] FastAPI Backend — Python Web Service (100% Free Plan)
   # ===========================================================================
   - type: web
     name: careerpilot-backend
@@ -25,8 +25,8 @@ services:
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
     region: singapore          # Match the region closest to NeonDB ap-southeast-1
-    plan: starter              # $7/mo — always-on (free plan sleeps after 15min)
-    branch: main
+    plan: free                 # Free tier (512MB RAM, sleeps after 15m inactivity)
+    branch: dev
     healthCheckPath: /healthz
 
     envVars:
@@ -88,18 +88,27 @@ services:
         value: "10"
 
   # ===========================================================================
-  # [2] Node.js BullMQ Worker — Background Worker (no public URL needed)
+  # [2] Node.js BullMQ Worker — Deployed as Web Service on Free Plan
+  #     (Note: Render "type: worker" requires paid Starter plan, but deploying
+  #      as "type: web" with health check runs the worker for FREE)
   # ===========================================================================
-  - type: worker
+  - type: web
     name: careerpilot-worker
     runtime: docker
     dockerfilePath: ./worker/Dockerfile
     dockerContext: ./worker
     region: singapore
-    plan: starter              # $7/mo — background workers need always-on
-    branch: main
+    plan: free                 # Free tier (512MB RAM)
+    branch: dev
+    healthCheckPath: /health
 
     envVars:
+      # ── App Port ───────────────────────────────────────────
+      - key: PORT
+        value: "3001"
+      - key: WORKER_PORT
+        value: "3001"
+
       # ── Google Gemini ───────────────────────────────────────
       - key: GOOGLE_API_KEY
         sync: false
@@ -119,7 +128,6 @@ services:
       # Upstash provides a single REDIS_URL with TLS
       - key: REDIS_URL
         sync: false            # e.g. rediss://default:password@...upstash.io:6380
-      # Individual host/port (kept for backwards compat — REDIS_URL takes priority)
       - key: REDIS_HOST
         sync: false
       - key: REDIS_PORT
@@ -127,17 +135,13 @@ services:
       - key: REDIS_PASSWORD
         sync: false
 
-      # ── Worker HTTP Server ──────────────────────────────────
-      - key: WORKER_PORT
-        value: "3001"
-
       # ── Backend callback ────────────────────────────────────
       # Set to the backend Web Service URL after it's deployed
       - key: API_BASE_URL
         sync: false            # e.g. https://careerpilot-backend.onrender.com
 
   # ===========================================================================
-  # [3] React Frontend — Static Site (free)
+  # [3] React Frontend — Static Site (Always Free)
   # ===========================================================================
   - type: web
     name: careerpilot-frontend
@@ -145,7 +149,7 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
     rootDir: ./frontend
-    branch: main
+    branch: dev
     pullRequestPreviewsEnabled: false
 
     headers:
