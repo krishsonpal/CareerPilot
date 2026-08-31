@@ -79,7 +79,9 @@ async def upload_resume_to_cloudinary(
             lambda: cloudinary.uploader.upload(
                 content,
                 public_id=public_id,
-                resource_type="raw",   # raw = non-image files (PDFs, TXT)
+                resource_type="auto",  # auto detects PDF/TXT
+                type="upload",
+                access_mode="public",  # Ensure public CDN delivery
                 overwrite=True,
                 invalidate=True,       # Bust CDN cache on re-upload
             ),
