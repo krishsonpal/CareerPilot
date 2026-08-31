@@ -86,7 +86,17 @@ async def upload_resume_to_cloudinary(
                 invalidate=True,       # Bust CDN cache on re-upload
             ),
         )
-        url: str = result["secure_url"]
+        # Generate signed secure URL
+        public_id_returned = result.get("public_id", public_id)
+        resource_type_returned = result.get("resource_type", "auto")
+        signed_url, _ = cloudinary.utils.cloudinary_url(
+            public_id_returned,
+            resource_type=resource_type_returned,
+            type="upload",
+            sign_url=True,
+            secure=True,
+        )
+        url: str = signed_url or result["secure_url"]
         logger.info(
             "Cloudinary upload success — user=%s public_id=%s url=%s",
             user_id,
