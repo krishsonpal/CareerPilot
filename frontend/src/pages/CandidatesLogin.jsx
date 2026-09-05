@@ -1,7 +1,7 @@
 import { LoaderCircle, Lock, Mail, Eye, EyeOff, ArrowRight } from "lucide-react";
 import React, { useContext, useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout from "../layout/AuthLayout";
 import { AppContext } from "../context/AppContext";
 import api from "../utils/api";
@@ -13,6 +13,7 @@ const CandidatesLogin = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const nextParam = searchParams.get("next");
 
@@ -34,7 +35,7 @@ const CandidatesLogin = () => {
         toast.success("Welcome back! Login successful.");
         const redirectUrl = getRedirectPath("student", nextParam);
         setTimeout(() => {
-          navigate(redirectUrl);
+          navigate(redirectUrl, { state: location.state });
         }, 100);
       }
     } catch (error) {
