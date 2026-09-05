@@ -64,9 +64,17 @@ const ApplicationsKanban = () => {
           </p>
         </div>
 
-        {/* View Mode Switcher & Filter */}
+        {/* View Mode Switcher & Filter & Find Jobs CTA (M5) */}
         <div className="flex flex-wrap items-center gap-3">
           
+          <Link
+            to="/app/jobs"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-colors shadow-xs"
+          >
+            <Sparkles size={13} />
+            <span>Find More Jobs</span>
+          </Link>
+
           {/* Role Type Filter */}
           <select
             value={selectedRoleType}
@@ -332,25 +340,40 @@ const ApplicationsKanban = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-border bg-muted/30 flex items-center justify-between">
+            <div className="p-4 border-t border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
               <button
                 onClick={() => {
                   if (selectedApp.job?.id) {
                     navigate(`/apply-job/${selectedApp.job.id}`);
                   }
                 }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline cursor-pointer"
               >
                 <span>View Full Job Spec</span>
                 <ExternalLink size={12} />
               </button>
 
-              <button
-                onClick={() => setSelectedApp(null)}
-                className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl"
-              >
-                Close
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigate("/app/assistant", {
+                      state: {
+                        initialPrompt: `Give me interview preparation advice for my application to the "${selectedApp.job?.title}" role at "${selectedApp.job?.recruiter?.company_name || 'this company'}".`
+                      }
+                    });
+                  }}
+                  className="px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold text-xs rounded-xl inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <Sparkles size={13} />
+                  <span>Interview Prep AI</span>
+                </button>
+                <button
+                  onClick={() => setSelectedApp(null)}
+                  className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </div>
 
           </div>
