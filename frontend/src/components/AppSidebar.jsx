@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Bot,
@@ -14,6 +14,12 @@ import { AppContext } from "../context/AppContext";
 
 const AppSidebar = () => {
   const { userData, logout } = useContext(AppContext);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   const navLinks = [
     {
@@ -146,7 +152,7 @@ const AppSidebar = () => {
           </div>
 
           <button
-            onClick={() => logout()}
+            onClick={handleLogout}
             title="Sign Out"
             className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer shrink-0"
           >
