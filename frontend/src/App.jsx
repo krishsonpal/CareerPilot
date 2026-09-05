@@ -30,6 +30,7 @@ import Profile from "./pages/app/Profile";
 import Dashborad from "./pages/Dashborad";
 import AddJobs from "./pages/AddJobs";
 import ManageJobs from "./pages/ManageJobs";
+import EditJob from "./pages/EditJob";
 import ViewApplications from "./pages/ViewApplications";
 
 const App = () => {
@@ -63,6 +64,7 @@ const App = () => {
         <Route index element={<ManageJobs />} />
         <Route path="manage-jobs" element={<ManageJobs />} />
         <Route path="add-job" element={<AddJobs />} />
+        <Route path="edit-job/:id" element={<EditJob />} />
         <Route path="view-applications" element={<ViewApplications />} />
       </Route>
 
