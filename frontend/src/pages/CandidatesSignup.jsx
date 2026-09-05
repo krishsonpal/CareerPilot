@@ -35,8 +35,8 @@ const CandidatesSignup = () => {
       });
 
       if (data.id) {
-        toast.success("Account created successfully! Please sign in.");
-        navigate(nextParam ? `/candidate-login?next=${encodeURIComponent(nextParam)}` : "/candidate-login");
+        toast.success("Account created successfully! Please sign in to complete your profile.");
+        navigate(nextParam ? `/candidate-login?next=${encodeURIComponent(nextParam)}` : "/candidate-login?next=/app/profile");
       }
     } catch (error) {
       toast.error(error?.response?.data?.detail || "Signup failed");
