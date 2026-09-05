@@ -1,4 +1,5 @@
 import React, { useContext, useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Search, Sparkles, Filter, X, Briefcase, SlidersHorizontal } from "lucide-react";
 import { AppContext } from "../../context/AppContext";
 import RecommendedRail from "../../components/RecommendedRail";
@@ -78,14 +79,25 @@ const Jobs = () => {
           </p>
         </div>
 
-        {/* Mobile Filter Toggle */}
-        <button
-          onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
-          className="lg:hidden inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl text-xs font-bold text-foreground"
-        >
-          <SlidersHorizontal size={14} />
-          <span>Filters ({selectedCategories.length + selectedLocations.length})</span>
-        </button>
+        {/* Header Actions */}
+        <div className="flex items-center gap-2.5">
+          <Link
+            to="/app/assistant"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold transition-colors shadow-xs"
+          >
+            <Sparkles size={14} />
+            <span>Ask AI Coach</span>
+          </Link>
+
+          {/* Mobile Filter Toggle */}
+          <button
+            onClick={() => setMobileFilterOpen(!mobileFilterOpen)}
+            className="lg:hidden inline-flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl text-xs font-bold text-foreground cursor-pointer"
+          >
+            <SlidersHorizontal size={14} />
+            <span>Filters ({selectedCategories.length + selectedLocations.length})</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. Pinned Top FAISS Recommended Rail */}
