@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { UserCheck, Sparkles, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { UserCheck, Sparkles, AlertCircle, ArrowRight } from "lucide-react";
 import { toast } from "react-hot-toast";
 import PipelineStepper from "../../components/PipelineStepper";
 import ResumeDropzone from "../../components/ResumeDropzone";
@@ -161,6 +162,38 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {/* Next Steps Action Bar (M4) */}
+      {profile && !isProcessing && (
+        <div className="bg-card border border-border rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Your profile is vector-indexed</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Ready to find jobs matched to your skill profile or simulate AI mock interviews?
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+            <Link
+              to="/app/assistant"
+              className="flex-1 sm:flex-none text-center px-4 py-2.5 rounded-xl border border-border bg-muted hover:bg-muted/80 text-foreground font-bold text-xs transition-colors"
+            >
+              Ask AI Coach
+            </Link>
+            <Link
+              to="/app/jobs"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs shadow-xs transition-all active:scale-[0.98]"
+            >
+              <span>Explore Matches</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      )}
 
     </div>
   );
