@@ -65,7 +65,10 @@ const ApplyJob = () => {
       const data = jobs.find((job) => String(job.id) === String(id));
       setJobData(data);
     } else if (!jobs.length && id) {
-      api.get(`/jobs/${id}`).then(res => setJobData(res.data)).catch(() => navigate('/'));
+      api.get(`/jobs/${id}`).then(res => setJobData(res.data)).catch(() => {
+        toast.error("Job not found or expired");
+        navigate('/all-jobs/all');
+      });
     }
   }, [id, jobs]);
 
