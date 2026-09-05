@@ -55,7 +55,7 @@ const AppSidebar = () => {
       <div>
         {/* Brand Header */}
         <div className="h-18 flex items-center px-6 border-b border-sidebar-border">
-          <Link to="/" className="flex items-center gap-2.5 group">
+          <Link to="/app" className="flex items-center gap-2.5 group">
             <div className="w-9 h-9 bg-primary text-primary-foreground rounded-xl flex items-center justify-center font-black text-base shadow-xs group-hover:scale-105 transition-transform">
               CP
             </div>
