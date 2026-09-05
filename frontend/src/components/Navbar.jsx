@@ -10,7 +10,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { assets } from "../assets/assets";
 import { AppContext } from "../context/AppContext";
@@ -23,6 +23,14 @@ const Navbar = () => {
   
   const { token, userRole, userData, isAuthLoading, logout } = useContext(AppContext);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    setIsProfileMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    navigate("/");
+  };
 
   const isStudent = token && userRole === "student";
   const isRecruiter = token && userRole === "recruiter";
@@ -189,7 +197,7 @@ const Navbar = () => {
                           <div className="h-px bg-border my-1"></div>
 
                           <button
-                            onClick={() => logout()}
+                            onClick={handleLogout}
                             className="w-full text-left flex items-center px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-xl transition-colors gap-2.5 cursor-pointer"
                           >
                             <LogOut size={16} /> Sign Out
@@ -288,7 +296,7 @@ const Navbar = () => {
                     </Link>
                   )}
                   <button
-                    onClick={() => logout()}
+                    onClick={handleLogout}
                     className="w-full text-left flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10"
                   >
                     <LogOut size={16} /> Sign Out
