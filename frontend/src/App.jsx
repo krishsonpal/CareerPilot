@@ -1,5 +1,5 @@
 import React from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./layout/AppLayout";
 import CandidateLayout from "./layout/CandidateLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -77,7 +77,7 @@ const App = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/about" element={<About />} />
               <Route path="/apply-job/:id" element={<ApplyJob />} />
-              <Route path="/applications" element={<Applications />} />
+              <Route path="/applications" element={<Navigate to="/app/applications" replace />} />
               <Route path="/candidate-login" element={<CandidatesLogin />} />
               <Route path="/candidate-signup" element={<CandidatesSignup />} />
               <Route path="/recruiter-login" element={<RecruiterLogin />} />
