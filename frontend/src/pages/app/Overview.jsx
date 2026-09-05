@@ -101,6 +101,30 @@ const Overview = () => {
         </div>
       </div>
 
+      {/* Missing Resume Onboarding Banner (M2) */}
+      {!userData?.resume_url && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">Upload your resume to activate AI matching</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Our Gemini parser and vector embeddings need your resume to compute accurate job match scores.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/app/profile"
+            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-black font-bold px-4 py-2 rounded-xl text-xs shadow-xs transition-all shrink-0 active:scale-[0.98]"
+          >
+            <span>Upload Resume</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+      )}
+
       {/* 2. Three Metric Snapshot Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         
