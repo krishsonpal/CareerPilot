@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { Sparkles, MapPin, Building2, DollarSign, Clock, ArrowRight } from "lucide-react";
 import kConverter from "k-convert";
 import moment from "moment";
 import { assets } from "../assets/assets";
+import { AppContext } from "../context/AppContext";
 
 const JobCard = ({ job }) => {
   const navigate = useNavigate();
+  const { token, userRole } = useContext(AppContext);
   const id = job.id || job._id;
 
   const formatSalary = () => {
@@ -20,8 +22,10 @@ const JobCard = ({ job }) => {
 
   const handleAskAI = (e) => {
     e.stopPropagation();
+    const isStudent = token && userRole === "student";
     const prompt = `Tell me about the requirements for the "${job.title}" position at "${job.recruiter?.company_name || 'this company'}" and analyze how my resume matches it.`;
-    navigate("/app/assistant", { state: { initialPrompt: prompt } });
+    const targetPath = isStudent ? "/app/assistant" : "/candidate-login?next=/app/assistant";
+    navigate(targetPath, { state: { initialPrompt: prompt } });
   };
 
   const handleApply = (e) => {
