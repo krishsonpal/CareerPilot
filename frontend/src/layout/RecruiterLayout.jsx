@@ -18,6 +18,11 @@ const RecruiterLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   const navItems = [
     {
       name: "Manage Postings",
@@ -105,7 +110,7 @@ const RecruiterLayout = () => {
             </div>
 
             <button
-              onClick={() => logout()}
+              onClick={handleLogout}
               title="Sign Out"
               className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer shrink-0"
             >
