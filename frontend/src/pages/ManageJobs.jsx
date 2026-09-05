@@ -12,6 +12,7 @@ import {
   XCircle,
   Layers,
   ArrowRight,
+  Edit3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
@@ -217,12 +218,22 @@ const ManageJobs = () => {
 
                     {/* Actions */}
                     <td className="py-4 px-6 text-right">
-                      <button
-                        onClick={() => navigate(`/dashboard/view-applications?job_id=${job.id}`)}
-                        className="text-xs font-bold text-primary hover:underline cursor-pointer"
-                      >
-                        View ATS Board →
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/dashboard/edit-job/${job.id}`)}
+                          title="Edit Job Posting"
+                          className="p-1.5 rounded-lg border border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer inline-flex items-center gap-1 text-xs font-semibold"
+                        >
+                          <Edit3 size={13} />
+                          <span className="hidden sm:inline">Edit</span>
+                        </button>
+                        <button
+                          onClick={() => navigate(`/dashboard/view-applications?job_id=${job.id}`)}
+                          className="text-xs font-bold text-primary hover:underline cursor-pointer"
+                        >
+                          ATS Board →
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
