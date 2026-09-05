@@ -84,9 +84,9 @@ const RecruiterLogin = () => {
             <label className="block text-xs font-bold text-foreground uppercase tracking-wider">
               Password
             </label>
-            <a href="#" className="text-xs font-bold text-primary hover:text-primary/80 hover:underline">
+            <Link to="/forgot-password?role=recruiter" className="text-xs font-bold text-primary hover:text-primary/80 hover:underline">
               Forgot password?
-            </a>
+            </Link>
           </div>
           <div className="border border-border rounded-xl flex items-center px-3.5 py-3 bg-input focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all shadow-xs">
             <Lock className="h-4 w-4 text-muted-foreground mr-2.5 shrink-0" />
