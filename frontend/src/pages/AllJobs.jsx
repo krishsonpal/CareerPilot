@@ -168,6 +168,31 @@ function AllJobs() {
       <div className="bg-background min-h-screen pt-6 pb-20">
         <div className="container mx-auto px-4 md:px-8">
           
+          {/* Breadcrumbs (M10) */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+            <span
+              onClick={() => navigate("/")}
+              className="hover:text-primary cursor-pointer transition-colors font-medium"
+            >
+              Home
+            </span>
+            <ChevronRight size={12} />
+            <span
+              onClick={() => {
+                if (category && category !== "all") navigate("/all-jobs/all");
+              }}
+              className={`${category && category !== "all" ? "hover:text-primary cursor-pointer" : "text-foreground font-semibold"} transition-colors`}
+            >
+              All Jobs
+            </span>
+            {category && category !== "all" && (
+              <>
+                <ChevronRight size={12} />
+                <span className="text-foreground font-semibold capitalize">{decodeURIComponent(category)}</span>
+              </>
+            )}
+          </div>
+
           <div className="md:hidden flex justify-end mb-4">
             <button
               onClick={() => setShowFilters(!showFilters)}
