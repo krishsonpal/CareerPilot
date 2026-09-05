@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { assets } from "../assets/assets";
 import Counter from "../components/Counter";
 import Footer from "../components/Footer";
@@ -126,6 +128,39 @@ const About = () => {
               </p>
             </motion.div>
           </div>
+
+          {/* Call to Action Bar (M6) */}
+          <motion.div
+            variants={SlideUp(0.5)}
+            initial="hidden"
+            whileInView="visible"
+            className="mt-16 text-center max-w-2xl mx-auto p-8 bg-card border border-border rounded-3xl shadow-sm space-y-4"
+          >
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+              <Sparkles size={24} />
+            </div>
+            <h3 className="text-2xl font-extrabold text-foreground">
+              Ready to Accelerate Your Career?
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Join thousands of students and recruiters matching seamlessly using AI.
+            </p>
+            <div className="pt-2 flex flex-wrap justify-center gap-3">
+              <Link
+                to="/all-jobs/all"
+                className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold px-6 py-3 rounded-xl text-sm shadow-xs transition-all active:scale-[0.98]"
+              >
+                <span>Browse All Jobs</span>
+                <ArrowRight size={16} />
+              </Link>
+              <Link
+                to="/candidate-signup"
+                className="inline-flex items-center gap-2 bg-muted hover:bg-muted/80 text-foreground font-bold px-6 py-3 rounded-xl text-sm border border-border transition-all"
+              >
+                <span>Create Free Account</span>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
       <Footer />

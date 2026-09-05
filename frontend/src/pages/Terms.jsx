@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import React from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { faqs } from "../assets/assets";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
@@ -10,11 +12,23 @@ const Terms = () => {
     <>
       <Navbar />
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 bg-background min-h-screen">
-        {/* Page Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
-            Terms and Conditions
-          </h1>
+        {/* Back Link & Page Header */}
+        <div className="mb-8">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground mb-6 transition-colors px-3 py-1.5 rounded-lg hover:bg-muted"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Home</span>
+          </Link>
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-semibold text-foreground mb-2">
+              Terms and Conditions
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Last updated: September 2026 • CareerPilot AI Platform
+            </p>
+          </div>
         </div>
         {/* Terms Content */}
         <div>
