@@ -129,14 +129,19 @@ const ResumeContextRail = () => {
             </div>
           )}
 
-          {/* Status Indicator */}
+          {/* Status Indicator & Navigation */}
           <div className="pt-2 border-t border-border flex items-center justify-between text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1 text-primary font-bold">
-              <CheckCircle2 size={12} /> FAISS 768-dim Vector Synced
+              <CheckCircle2 size={12} /> FAISS Synced
             </span>
-            <Link to="/app/profile" className="text-primary hover:underline font-bold">
-              Update
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/app/jobs" className="text-primary hover:underline font-bold">
+                Find Jobs →
+              </Link>
+              <Link to="/app/profile" className="text-muted-foreground hover:text-foreground font-semibold">
+                Edit
+              </Link>
+            </div>
           </div>
 
         </div>
