@@ -17,6 +17,7 @@ import CandidatesLogin from "./pages/CandidatesLogin";
 import CandidatesSignup from "./pages/CandidatesSignup";
 import RecruiterLogin from "./pages/RecruiterLogin";
 import RecruiterSignup from "./pages/RecruiterSignup";
+import ForgotPassword from "./pages/ForgotPassword";
 
 // Candidate App Pages
 import Overview from "./pages/app/Overview";
@@ -82,6 +83,7 @@ const App = () => {
               <Route path="/candidate-signup" element={<CandidatesSignup />} />
               <Route path="/recruiter-login" element={<RecruiterLogin />} />
               <Route path="/recruiter-signup" element={<RecruiterSignup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
             </Routes>
           </AppLayout>
         }
