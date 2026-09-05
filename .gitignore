@@ -71,3 +71,20 @@ bower_components
 psd
 thumb
 sketch
+
+# Test files and test directories
+test_*.py
+*_test.py
+tests/
+test/
+backend/temp_uploads/
+
+# Root level scratch & audit jsx files (preserves frontend/src/**/*.jsx)
+/*.jsx
+
+# Planning, Architecture & Scratch Markdown files (preserves official READMEs)
+*.md
+!README.md
+!backend/README.md
+!worker/README.md
+
