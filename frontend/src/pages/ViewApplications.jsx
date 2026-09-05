@@ -118,9 +118,9 @@ const ViewApplications = () => {
           </div>
         </div>
 
-        {/* Job Selector Dropdown */}
+        {/* Job Selector Dropdown & Preview Link (M3) */}
         {recruiterJobs.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Job:</span>
             <select
               value={selectedJobId}
@@ -136,6 +136,18 @@ const ViewApplications = () => {
                 </option>
               ))}
             </select>
+            {selectedJobId && (
+              <a
+                href={`/apply-job/${selectedJobId}`}
+                target="_blank"
+                rel="noreferrer"
+                title="View Live Job Posting"
+                className="p-2 rounded-xl bg-muted/70 hover:bg-muted border border-border text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 text-xs font-semibold"
+              >
+                <ExternalLink size={14} />
+                <span className="hidden sm:inline">Preview Post</span>
+              </a>
+            )}
           </div>
         )}
       </div>
